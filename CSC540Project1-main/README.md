@@ -25,7 +25,7 @@ All <br>
 `pip3 install --user -r requirements.txt `
 
 IF commit fails - set username and email <br>
-`git config user.name "nrpancho"` <br>
-`git config user.email "nrpancho@ncsu.edu"`
+`git config user.name "your github name"` <br>
+`git config user.email "your github email"`
 
 
