@@ -109,13 +109,13 @@ CREATE TABLE Enrollments (
 -- Student Activity Tracking Table for score and timestamp of each activity
 CREATE TABLE StudentActivities (
     student_id VARCHAR(10) NOT NULL,
-    course_id VARCHAR(20) NOT NULL,
+    course_id INT NOT NULL,
     textbook_id INT NOT NULL,
-    chapter_id VARCHAR(10) NOT NULL,
-    section_id VARCHAR(10) NOT NULL,
-    block_id VARCHAR(10) NOT NULL,
-    unique_activity_id VARCHAR(10) NOT NULL,
-    question_id VARCHAR(10) NOT NULL,
+    chapter_id INT NOT NULL,
+    section_id INT NOT NULL,
+    block_id INT NOT NULL,
+    unique_activity_id INT NOT NULL,
+    question_id INT NOT NULL,
     points INT DEFAULT 0 CHECK (points >= 0),
     activity_timestamp DATETIME NOT NULL,
     
@@ -131,14 +131,6 @@ CREATE TABLE StudentActivities (
     FOREIGN KEY (question_id) REFERENCES Questions(question_id)
 );
 
--- Notifications Table for managing notifications sent to users
-CREATE TABLE Notifications (
-    notification_id INT PRIMARY KEY AUTO_INCREMENT,
-    recipient_user_id VARCHAR(10) NOT NULL,
-    notification_text TEXT NOT NULL,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (recipient_user_id) REFERENCES Users(user_id)
-);
 
 -- Course TA Assignment Table to link TAs with specific courses
 CREATE TABLE CourseTAs (
