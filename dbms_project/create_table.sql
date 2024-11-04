@@ -11,7 +11,7 @@ CREATE TABLE Users (
 
 -- Textbooks Table for managing textbooks associated with Admins
 CREATE TABLE Textbooks (
-    textbook_id INT PRIMARY KEY AUTO_INCREMENT,
+    textbook_id INT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     created_by_admin VARCHAR(10) NOT NULL,
     hidden BOOLEAN DEFAULT FALSE,
@@ -19,70 +19,159 @@ CREATE TABLE Textbooks (
 );
 
 -- Chapter Table to store individual chapters for each textbook
+-- CREATE TABLE Chapters (
+--     chapter_id INT PRIMARY KEY AUTO_INCREMENT,
+--     textbook_id INT NOT NULL,
+--     chapter_title VARCHAR(255) NOT NULL,
+--     hidden BOOLEAN DEFAULT FALSE,
+--     FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
+-- );
 CREATE TABLE Chapters (
-    chapter_id INT PRIMARY KEY AUTO_INCREMENT,
     textbook_id INT NOT NULL,
-    chapter_title VARCHAR(255) NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     hidden BOOLEAN DEFAULT FALSE,
+    
+    PRIMARY KEY (textbook_id, chapter_id),
+    
     FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
 );
 
+
+
 -- Section Table to manage sections within chapters
+-- CREATE TABLE Sections (
+--     section_id VARCHAR(10),
+--     textbook_id INT,
+--     chapter_id VARCHAR(10) NOT NULL,
+--     section_title VARCHAR(255) NOT NULL,
+--     hidden BOOLEAN DEFAULT FALSE,
+--     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id)
+-- );
+
 CREATE TABLE Sections (
-    section_id INT PRIMARY KEY AUTO_INCREMENT,
-    chapter_id INT NOT NULL,
-    section_title VARCHAR(255) NOT NULL,
+    textbook_id INT NOT NULL,
+    section_id VARCHAR(10) NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     hidden BOOLEAN DEFAULT FALSE,
+
+    PRIMARY KEY (textbook_id, section_id, chapter_id),
+
+    FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id),
     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id)
 );
 
+
 -- Content Block Table to store content (text, picture, activities) within sections
+-- CREATE TABLE ContentBlocks (
+--     content_block_id INT PRIMARY KEY AUTO_INCREMENT,
+--     section_number INT NOT NULL,
+--     chapter_id INT NOT NULL,
+--     textbook_id INT NOT NULL,
+--     content_type ENUM('text', 'picture', 'activities') NOT NULL,
+--     content TEXT,
+--     hidden BOOLEAN DEFAULT FALSE,
+--     FOREIGN KEY (section_number) REFERENCES Sections(section_id),
+--     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id),
+--     FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
+-- );
 CREATE TABLE ContentBlocks (
-    content_block_id INT PRIMARY KEY AUTO_INCREMENT,
-    section_number INT NOT NULL,
-    chapter_id INT NOT NULL,
     textbook_id INT NOT NULL,
-    content_type ENUM('text', 'picture', 'activities') NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
+    section_number VARCHAR(10) NOT NULL,
+    content_block_id VARCHAR(10) NOT NULL,
+    content_type ENUM('text', 'activity', 'picture') NOT NULL,
     content TEXT,
     hidden BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (section_number) REFERENCES Sections(section_id),
+
+    PRIMARY KEY (textbook_id, chapter_id, section_number, content_block_id),
+
+    FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id),
     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id),
-    FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
+    FOREIGN KEY (section_id) REFERENCES Sectionss(section_id)
 );
 
+
+
 -- Activity Table to define interactive elements within content blocks
+-- CREATE TABLE Activities (
+--     activity_id INT PRIMARY KEY AUTO_INCREMENT,
+--     content_block_id INT NOT NULL,
+--     section_id INT NOT NULL,
+--     chapter_id INT NOT NULL,
+--     textbook_id INT NOT NULL,
+--     hidden BOOLEAN DEFAULT FALSE,
+--     FOREIGN KEY (content_block_id) REFERENCES ContentBlocks(content_block_id),
+--     FOREIGN KEY (section_id) REFERENCES Sections(section_id),
+--     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id),
+--     FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
+-- );
 CREATE TABLE Activities (
-    activity_id INT PRIMARY KEY AUTO_INCREMENT,
-    content_block_id INT NOT NULL,
-    section_id INT NOT NULL,
-    chapter_id INT NOT NULL,
+    activity_id VARCHAR(10) NOT NULL,
+    content_block_id VARCHAR(10) NOT NULL,
+    section_id VARCHAR(10) NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
     textbook_id INT NOT NULL,
     hidden BOOLEAN DEFAULT FALSE,
+
+    PRIMARY KEY (activity_id, content_block_id, section_id, chapter_id, textbook_id),
+
     FOREIGN KEY (content_block_id) REFERENCES ContentBlocks(content_block_id),
     FOREIGN KEY (section_id) REFERENCES Sections(section_id),
     FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id),
     FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id)
 );
 
+
+
+
+
 -- Question Table to store questions associated with activities
+-- CREATE TABLE Questions (
+--     question_id INT PRIMARY KEY AUTO_INCREMENT,
+--     activity_id INT NOT NULL,
+--     question_text TEXT NOT NULL,
+--     correct_answer VARCHAR(255) NOT NULL,
+--     explanation_correct TEXT,
+--     answer_option_1 VARCHAR(255),
+--     explanation_option_1 TEXT,
+--     answer_option_2 VARCHAR(255),
+--     explanation_option_2 TEXT,
+--     answer_option_3 VARCHAR(255),
+--     explanation_option_3 TEXT,
+--     FOREIGN KEY (activity_id) REFERENCES Activities(activity_id)
+-- );
+
 CREATE TABLE Questions (
-    question_id INT PRIMARY KEY AUTO_INCREMENT,
-    activity_id INT NOT NULL,
+    question_id VARCHAR(10) NOT NULL,
+    textbook_id INT NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
+    section_id VARCHAR(10) NOT NULL,
+    block_id VARCHAR(10) NOT NULL,
+    unique_activity_id VARCHAR(10) NOT NULL,
     question_text TEXT NOT NULL,
-    correct_answer VARCHAR(255) NOT NULL,
-    explanation_correct TEXT,
-    answer_option_1 VARCHAR(255),
-    explanation_option_1 TEXT,
-    answer_option_2 VARCHAR(255),
-    explanation_option_2 TEXT,
-    answer_option_3 VARCHAR(255),
-    explanation_option_3 TEXT,
-    FOREIGN KEY (activity_id) REFERENCES Activities(activity_id)
+    option_1 TEXT NOT NULL,
+    opt_1_exp TEXT NOT NULL,
+    option_2 TEXT NOT NULL,
+    opt_2_exp TEXT NOT NULL,
+    option_3 TEXT NOT NULL,
+    opt_3_exp TEXT NOT NULL,
+    option_4 TEXT NOT NULL,
+    opt_4_exp TEXT NOT NULL,
+    answer INT NOT NULL,
+    
+    PRIMARY KEY (question_id, textbook_id, chapter_id, section_id, block_id, unique_activity_id),
+    
+    FOREIGN KEY (textbook_id) REFERENCES Textbooks(textbook_id),
+    FOREIGN KEY (chapter_id) REFERENCES Chapters(chapter_id),
+    FOREIGN KEY (section_id) REFERENCES Sections(section_id),
+    FOREIGN KEY (block_id) REFERENCES ContentBlocks(content_block_id)
 );
 
 -- Course Table to store course information and link to faculty, textbooks, and TAs
 CREATE TABLE Courses (
-    course_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_id VARCHAR(255) PRIMARY KEY,
     textbook_id INT NOT NULL,
     course_name VARCHAR(255) NOT NULL,
     faculty_user_id VARCHAR(10) NOT NULL,
@@ -98,24 +187,36 @@ CREATE TABLE Courses (
 );
 
 -- Enrollment Table to manage student enrollment status in courses
+-- CREATE TABLE Enrollments (
+--     course_id INT NOT NULL,
+--     student_user_id VARCHAR(10) NOT NULL,
+--     enrollment_status ENUM('Pending', 'Enrolled', 'Rejected') DEFAULT 'Pending',
+--     FOREIGN KEY (course_id) REFERENCES Courses(course_id),
+--     FOREIGN KEY (student_user_id) REFERENCES Users(user_id)
+-- );
+
 CREATE TABLE Enrollments (
-    course_id INT NOT NULL,
+    course_id VARCHAR(255) NOT NULL,
     student_user_id VARCHAR(10) NOT NULL,
-    enrollment_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    enrollment_status ENUM('Enrolled', 'Pending') DEFAULT 'Pending',
+    
+    PRIMARY KEY (course_id, student_user_id),
+    
     FOREIGN KEY (course_id) REFERENCES Courses(course_id),
     FOREIGN KEY (student_user_id) REFERENCES Users(user_id)
 );
 
+
 -- Student Activity Tracking Table for score and timestamp of each activity
 CREATE TABLE StudentActivities (
     student_id VARCHAR(10) NOT NULL,
-    course_id INT NOT NULL,
+    course_id VARCHAR(255) NOT NULL,
     textbook_id INT NOT NULL,
-    chapter_id INT NOT NULL,
-    section_id INT NOT NULL,
-    block_id INT NOT NULL,
-    unique_activity_id INT NOT NULL,
-    question_id INT NOT NULL,
+    chapter_id VARCHAR(10) NOT NULL,
+    section_id VARCHAR(10) NOT NULL,
+    block_id VARCHAR(10) NOT NULL,
+    unique_activity_id VARCHAR(10) NOT NULL,
+    question_id VARCHAR(10) NOT NULL,
     points INT DEFAULT 0 CHECK (points >= 0),
     activity_timestamp DATETIME NOT NULL,
     
@@ -134,9 +235,13 @@ CREATE TABLE StudentActivities (
 
 -- Course TA Assignment Table to link TAs with specific courses
 CREATE TABLE CourseTAs (
-    course_ta_id INT PRIMARY KEY AUTO_INCREMENT,
+    course_ta_id VARCHAR(10) NOT NULL,
     course_id INT NOT NULL,
-    ta_user_id VARCHAR(10) NOT NULL,
+    faculty_id VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY (course_ta_id, course_id),
+    
     FOREIGN KEY (course_id) REFERENCES Courses(course_id),
-    FOREIGN KEY (ta_user_id) REFERENCES Users(user_id)
+    FOREIGN KEY (course_ta_id) REFERENCES Users(user_id),
+    FOREIGN KEY (faculty_id) REFERENCES Users(user_id)    
 );
