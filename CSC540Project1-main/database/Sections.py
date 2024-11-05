@@ -144,6 +144,24 @@ class SectionCRUD:
             finally:
                 cursor.close()
         return []
+        
+    def get_sections_by_chapter_and_textbook(self, chapter_id, textbook_id, include_hidden=False):
+        """Fetch all sections for a given chapter ID and textbook ID."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = "SELECT section_id, title, hidden FROM Sections WHERE chapter_id = %s AND textbook_id = %s"
+                if not include_hidden:
+                    query += " AND hidden = FALSE"
+                cursor.execute(query, (chapter_id, textbook_id))
+                sections = cursor.fetchall()
+                return sections
+            except Exception as e:
+                print(f"Error fetching sections: {e}")
+                return []
+            finally:
+                cursor.close()
+        return []
 
 
 
