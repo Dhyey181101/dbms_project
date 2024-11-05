@@ -41,20 +41,33 @@ class SectionCRUD:
             finally:
                 cursor.close()
 
+    def get_sections_by_chapter_and_textbook(self, chapter_id, textbook_id, include_hidden=False):
+        """Fetch all sections for a given chapter ID and textbook ID."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = "SELECT section_id, title, hidden FROM Sections WHERE chapter_id = %s AND textbook_id = %s"
+                if not include_hidden:
+                    query += " AND hidden = FALSE"
+                cursor.execute(query, (chapter_id, textbook_id))
+                sections = cursor.fetchall()
+                return sections
+            except Exception as e:
+                print(f"Error fetching sections: {e}")
+                return []
+            finally:
+                cursor.close()
+        return []
 
-    def modify_section(self, section_title, chapter_id, textbook_id, new_section_id=None, new_section_title=None, new_hidden=None):
-        """Modify a section's details using the title, chapter_id, and textbook_id as identifiers."""
-        section_id = self.get_section_id_by_title(section_title, chapter_id, textbook_id)
+    # Modify CRUD method for modifying a section
+    def modify_section(self, section_id, chapter_id, textbook_id, new_section_title=None, new_hidden=None):
+        """Modify a section's details using the section_id, chapter_id, and textbook_id as identifiers."""
         if section_id and self.connection:
             try:
                 cursor = self.connection.cursor()
                 updates = []
                 values = []
-                
-                if new_section_id:
-                    updates.append("section_id = %s")
-                    values.append(new_section_id)
-                
+
                 if new_section_title:
                     updates.append("title = %s")
                     values.append(new_section_title)

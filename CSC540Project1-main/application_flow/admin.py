@@ -7,6 +7,7 @@ from database.ContentBlocks import ContentBlockCRUD
 from database.Courses import CourseCRUD
 from database.CourseTAs import CourseTACRUD
 from database.Enrollments import EnrollmentCRUD
+from database.Questions import QuestionsCRUD 
 from utils.db_connector import DatabaseConnectionManager
 
 # Database CRUD operations
@@ -18,6 +19,7 @@ contentblockcrud = ContentBlockCRUD(DatabaseConnectionManager.get_connection())
 coursecrud = CourseCRUD(DatabaseConnectionManager.get_connection())
 coursetacrud = CourseTACRUD(DatabaseConnectionManager.get_connection())
 enrollmentcrud = EnrollmentCRUD(DatabaseConnectionManager.get_connection())
+questions_crud = QuestionsCRUD(DatabaseConnectionManager.get_connection()) 
 
 class AdminFlow(Flow):
     def __init__(self, user_id, email):
@@ -204,7 +206,7 @@ class AdminFlow(Flow):
             return
 
         chapter_id = input("Enter Chapter ID to modify: ")
-        selected_chapter = next((chapter for chapter in chapters if str(chapter['ChapterID']) == chapter_id), None)
+        selected_chapter = next((chapter for chapter in chapters if str(chapter['chapter_id']) == chapter_id), None)
 
         if selected_chapter:
             while True:
@@ -223,7 +225,7 @@ class AdminFlow(Flow):
                 if choice == 1:
                     self.handle_add_section(textbook_id, chapter_id)
                 elif choice == 2:
-                    self.handle_modify_section(chapter_id)
+                    self.handle_modify_section(textbook_id, chapter_id)
                 elif choice == 3:
                     # Go back to the previous menu
                     print("Going back to the previous menu.")
@@ -269,48 +271,245 @@ class AdminFlow(Flow):
             else:
                 print("Invalid choice. Please try again.")
 
-    def handle_modify_section(self):
+    def handle_modify_section(self, textbook_id, chapter_id):
         print("Modifying a section...")
-        textbook_id = input("Enter E-textbook ID: ")
-        chapter_id = input("Enter Chapter ID: ")
         section_number = input("Enter Section Number to modify: ")
-        sections = sectioncrud.get_sections_by_chapter(chapter_id)
-        selected_section = next((section for section in sections if str(section['SectionNumber']) == section_number), None)
+        sections = sectioncrud.get_sections_by_chapter_and_textbook(chapter_id, textbook_id)  # Updated function
+        selected_section = next((section for section in sections if str(section['section_id']) == section_number), None)
 
-        if not selected_section:
-            print("Section not found. Returning to menu.")
-            return
+        if selected_section:
+            while True:
+                print("\nModify Section Menu:")
+                print("1. Add New Content Block")
+                print("2. Modify Content Block")
+                print("3. Go Back")
+                print("4. Landing Page")
 
-        section_id = selected_section['SectionID']
-        new_section_number = input("Enter new Section Number (leave blank if no change): ")
-        new_section_title = input("Enter new Section Title (leave blank if no change): ")
-        sectioncrud.modify_section(section_id, new_section_number or None, new_section_title or None)
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
 
-    def handle_add_content_block(self, section_id):
-        print("Adding a new content block...")
-        block_type = input("Enter Content Block Type: ")
-        content = input("Enter Content: ")
-        contentblockcrud.add_content_block(section_id, block_type, content)
-        print("Content block added successfully.")
+                if choice == 1:
+                    self.handle_add_content_block(textbook_id, chapter_id, section_number)
+                elif choice == 2:
+                    self.handle_modify_content_block(textbook_id, chapter_id, section_number)
+                elif choice == 3:
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 4:
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
+        else:
+            print("Section Number not found.")
+            
+    def handle_add_content_block(self, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding a new content block...")
+            content_block_id = input("Enter Content Block ID: ")
 
-    def handle_modify_content_block(self, section_id):
+            print("\nContent Block Menu:")
+            print("1. Add Text")
+            print("2. Add Picture")
+            print("3. Add Activity")
+            print("4. Go Back")
+            print("5. Landing Page")
+
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+
+            if choice == 1:
+                self.handle_add_text(content_block_id, section_id, chapter_id, textbook_id)
+            elif choice == 2:
+                self.handle_add_picture(content_block_id, section_id, chapter_id, textbook_id)
+            elif choice == 3:
+                self.handle_add_activity(content_block_id, section_id, chapter_id, textbook_id)
+            elif choice == 4:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 5:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    ### Function to Add Text
+    def handle_add_text(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Text Content Block...")
+            text_content = input("Enter Text: ")
+
+            print("\nText Menu:")
+            print("1. Add")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Insert text content block into the database
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "text", text_content)
+                print("Text content block added successfully.")
+                return
+            elif choice == 2:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    def handle_add_picture(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Picture Content Block...")
+            picture_content = input("Enter Picture URL or Path: ")
+
+            print("\nPicture Menu:")
+            print("1. Add")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Insert picture content block into the database
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "picture", picture_content)
+                print("Picture content block added successfully.")
+                return
+            elif choice == 2:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    def handle_add_activity(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Activity Content Block...")
+            activity_id = input("Enter Unique Activity ID: ")
+
+            print("\nActivity Menu:")
+            print("1. Add Question")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Insert activity content block and then redirect to question addition
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "activity", activity_id)
+                print("Activity content block added successfully.")
+                self.handle_add_question(activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                return
+            elif choice == 2:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    def handle_add_question(self, activity_id, content_block_id, section_id, chapter_id, textbook_id):
+        print("Adding a new question...")
+
+        # Collect question details
+        question_id = input("Enter Question ID: ")
+        question_text = input("Enter Question Text: ")
+
+        # Collect options and explanations
+        options = []
+        for i in range(1, 5):
+            option_text = input(f"Enter Option {i} Text: ")
+            option_explanation = input(f"Enter Option {i} Explanation: ")
+            option_label = input(f"Enter Option {i} Label (Correct or Incorrect): ")
+            options.append((option_text, option_explanation, option_label == "Correct"))
+
+        answer = next((i + 1 for i, opt in enumerate(options) if opt[2]), None)  # Find the correct option index
+
+        while True:
+            print("\nQuestion Menu:")
+            print("1. Save")
+            print("2. Cancel")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+
+            if choice == 1:
+                # Save question to database
+                questions_crud.add_question(
+                    question_id, textbook_id, chapter_id, section_id, content_block_id, activity_id,
+                    question_text, options, answer
+                )
+                print("Question saved successfully.")
+                return
+            elif choice == 2:
+                print("Canceling and going back to Add Activity page.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+
+    def handle_modify_content_block(self, textbook_id, chapter_id, section_number):
         print("Modifying a content block...")
-        content_blocks = contentblockcrud.get_content_blocks_by_section(section_id)
-        
+        content_blocks = contentblockcrud.get_content_blocks_by_section(textbook_id, chapter_id, section_number)
+
         if not content_blocks:
             print("No content blocks found for this section.")
             return
 
-        block_id = input("Enter Content Block ID to modify: ")
-        selected_block = next((block for block in content_blocks if str(block['BlockID']) == block_id), None)
-        
+        content_block_id = input("Enter Content Block ID to modify: ")
+        selected_block = next((block for block in content_blocks if str(block['content_block_id']) == content_block_id), None)
+
         if selected_block:
-            new_block_type = input("Enter new Content Block Type (leave blank if no change): ") or selected_block['BlockType']
-            new_content = input("Enter new Content (leave blank if no change): ") or selected_block['Content']
-            contentblockcrud.modify_content_block(block_id, new_block_type, new_content)
-            print("Content block modified successfully.")
+            while True:
+                print("\nModify Content Block Menu:")
+                print("1. Add Text")
+                print("2. Add Picture")
+                print("3. Add New Activity")
+                print("4. Go Back")
+                print("5. Landing Page")
+
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
+
+                if choice == 1:
+                    # Use the existing function to handle adding text content
+                    self.handle_add_text(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 2:
+                    # Use the existing function to handle adding picture content
+                    self.handle_add_picture(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 3:
+                    # Use the existing function to handle adding activity content
+                    self.handle_add_activity(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 4:
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 5:
+                    print("Returning to User Landing Page.")
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
         else:
             print("Content Block ID not found.")
+
 
     def handle_new_course(self, active=True):
         print("Creating a new course...")
