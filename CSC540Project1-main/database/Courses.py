@@ -6,18 +6,17 @@ class CourseCRUD:
         if DatabaseConnectionManager.check_if_connected():
             self.connection = connection
 
-    def create_course(self, course_id, course_name, textbook_id, faculty_user_id, ta_user_id, start_date, end_date, course_category, access_token, max_enrollment):
+    def create_course(self, course_id, course_name, textbook_id, faculty_user_id, start_date, end_date, course_category, access_token=None, max_enrollment=None):
         """Creates a new course."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
                 query = """
-                INSERT INTO Courses (course_id, course_name, textbook_id, faculty_user_id, ta_user_id, start_date, end_date, course_category, access_token, max_enrollment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO Courses (course_id, course_name, textbook_id, faculty_user_id, start_date, end_date, course_category, access_token, max_enrollment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (course_id, course_name, textbook_id, faculty_user_id, ta_user_id, start_date, end_date, course_category, access_token, max_enrollment))
+                cursor.execute(query, (course_id, course_name, textbook_id, faculty_user_id, start_date, end_date, course_category, access_token, max_enrollment))
                 self.connection.commit()
-                print("Course created successfully.")
             except Exception as e:
                 print(f"Error creating course: {e}")
             finally:

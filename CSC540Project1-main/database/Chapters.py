@@ -68,6 +68,7 @@ class ChapterCRUD:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = "SELECT chapter_id, title, hidden FROM Chapters WHERE textbook_id = %s"
+                query = "SELECT chapter_id, title, hidden FROM Chapters WHERE textbook_id = %s"
                 if not include_hidden:
                     query += " AND hidden = FALSE"
                 cursor.execute(query, (textbook_id,))
@@ -79,6 +80,7 @@ class ChapterCRUD:
             finally:
                 cursor.close()
         return []
+        
 
       
     def modify_chapter(self, chapter_name, new_title=None, new_is_hidden=None):
