@@ -304,7 +304,7 @@ class AdminFlow(Flow):
                     print("Invalid choice. Please try again.")
         else:
             print("Section Number not found.")
-            
+
     def handle_add_content_block(self, section_id, chapter_id, textbook_id):
         while True:
             print("Adding a new content block...")
@@ -512,18 +512,49 @@ class AdminFlow(Flow):
 
 
     def handle_new_course(self, active=True):
-        print("Creating a new course...")
+        print("Creating a new {} course...".format("Active" if active else "Evaluation"))
+        
+        # Prompt for common course details
         course_id = input("Enter Course ID: ")
         course_name = input("Enter Course Name: ")
-        textbook_id = int(input("Enter Textbook ID: "))
-        faculty_id = input("Enter Faculty User ID: ")
+        textbook_id = int(input("Enter E-textbook ID: "))
+        faculty_id = input("Enter Faculty Member ID: ")
         start_date = input("Enter Start Date (YYYY-MM-DD): ")
         end_date = input("Enter End Date (YYYY-MM-DD): ")
-        access_token = input("Enter Access Token: ")
-        max_enrollment = int(input("Enter Max Enrollment: "))
-        course_category = "Active" if active else "Evaluation"
         
-        coursecrud.create_course(course_id, course_name, textbook_id, faculty_id, start_date, end_date, course_category, access_token, max_enrollment)
+        # Prompt for additional fields based on course type
+        if active:
+            access_token = input("Enter Unique Token: ")
+            max_enrollment = int(input("Enter Course Capacity: "))
+            course_category = "Active"
+        else:
+            access_token = None  # Evaluation courses don't require a token
+            max_enrollment = None  # Evaluation courses don't have a capacity limit
+            course_category = "Evaluation"
+
+        # Menu for saving or discarding the entry
+        while True:
+            print("\nCourse Creation Menu:")
+            print("1. Save")
+            print("2. Cancel")
+            print("3. Landing Page")
+            
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Call the CRUD method to save course details to the database
+                coursecrud.create_course(course_id, course_name, textbook_id, faculty_id, start_date, end_date, course_category, access_token, max_enrollment)
+                print("Course created successfully.")
+                return  # Return to the previous menu after saving
+            elif choice == 2:
+                print("Cancelling course creation and going back.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
 
     def handle_logout(self):
         self.logout = True
