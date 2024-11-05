@@ -7,11 +7,11 @@ class TextbookCRUD:
             self.connection = connection
 
     def get_textbook_id_by_title(self, title):
-        """Retrieve the Textbook ID based on the title."""
+        """Retrieve the textbook_id based on the title."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "SELECT TextbookID FROM Textbook WHERE Title = %s"
+                query = "SELECT textbook_id FROM Textbooks WHERE title = %s"
                 cursor.execute(query, (title,))
                 result = cursor.fetchone()
                 if result:
@@ -31,7 +31,7 @@ class TextbookCRUD:
             try:
                 cursor = self.connection.cursor()
                 query = """
-                INSERT INTO Textbook (Title, AdminID, IsHidden)
+                INSERT INTO Textbooks (title, created_by_admin, hidden)
                 VALUES (%s, %s, %s)
                 """
                 cursor.execute(query, (title, admin_id, is_hidden))
@@ -52,15 +52,15 @@ class TextbookCRUD:
                 values = []
                 
                 if new_title:
-                    updates.append("Title = %s")
+                    updates.append("title = %s")
                     values.append(new_title)
                 
                 if is_hidden is not None:
-                    updates.append("IsHidden = %s")
+                    updates.append("hidden = %s")
                     values.append(is_hidden)
                 
                 if updates:
-                    query = f"UPDATE Textbook SET {', '.join(updates)} WHERE TextbookID = %s"
+                    query = f"UPDATE Textbooks SET {', '.join(updates)} WHERE textbook_id = %s"
                     values.append(textbook_id)
                     cursor.execute(query, tuple(values))
                     self.connection.commit()
@@ -77,9 +77,9 @@ class TextbookCRUD:
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
-                query = "SELECT TextbookID, Title, AdminID, IsHidden FROM Textbook"
+                query = "SELECT textbook_id, title, created_by_admin, hidden FROM Textbooks"
                 if not include_hidden:
-                    query += " WHERE IsHidden = FALSE"
+                    query += " WHERE hidden = FALSE"
                 
                 cursor.execute(query)
                 textbooks = cursor.fetchall()

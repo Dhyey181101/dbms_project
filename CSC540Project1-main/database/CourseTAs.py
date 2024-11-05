@@ -6,16 +6,16 @@ class CourseTACRUD:
         if DatabaseConnectionManager.check_if_connected():
             self.connection = connection
 
-    def assign_ta_to_course(self, course_id, ta_id):
-        """Assign a TA to a course."""
+    def assign_ta_to_course(self, course_ta_id, course_id, faculty_id):
+        """Assign a TA to a course with specific IDs."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
                 query = """
-                INSERT INTO CourseTA (CourseID, TA_ID)
-                VALUES (%s, %s)
+                INSERT INTO CourseTAs (course_ta_id, course_id, faculty_id)
+                VALUES (%s, %s, %s)
                 """
-                cursor.execute(query, (course_id, ta_id))
+                cursor.execute(query, (course_ta_id, course_id, faculty_id))
                 self.connection.commit()
                 print("TA assigned to course successfully.")
             except Exception as e:
@@ -23,8 +23,8 @@ class CourseTACRUD:
             finally:
                 cursor.close()
 
-    def modify_ta_assignment(self, course_ta_id, course_id=None, ta_id=None):
-        """Modify an existing TA assignment to a course."""
+    def modify_ta_assignment(self, course_ta_id, course_id=None, faculty_id=None):
+        """Modify an existing TA assignment in a course."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
@@ -32,14 +32,14 @@ class CourseTACRUD:
                 values = []
                 
                 if course_id:
-                    updates.append("CourseID = %s")
+                    updates.append("course_id = %s")
                     values.append(course_id)
-                if ta_id:
-                    updates.append("TA_ID = %s")
-                    values.append(ta_id)
+                if faculty_id:
+                    updates.append("faculty_id = %s")
+                    values.append(faculty_id)
 
                 if updates:
-                    query = f"UPDATE CourseTA SET {', '.join(updates)} WHERE CourseTAID = %s"
+                    query = f"UPDATE CourseTAs SET {', '.join(updates)} WHERE course_ta_id = %s"
                     values.append(course_ta_id)
                     cursor.execute(query, tuple(values))
                     self.connection.commit()
@@ -56,7 +56,7 @@ class CourseTACRUD:
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
-                query = "SELECT CourseTAID, CourseID, TA_ID FROM CourseTA"
+                query = "SELECT course_ta_id, course_id, faculty_id FROM CourseTAs"
                 cursor.execute(query)
                 course_tas = cursor.fetchall()
                 return course_tas
@@ -72,7 +72,7 @@ class CourseTACRUD:
         if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "DELETE FROM CourseTA WHERE CourseTAID = %s"
+                query = "DELETE FROM CourseTAs WHERE course_ta_id = %s"
                 cursor.execute(query, (course_ta_id,))
                 self.connection.commit()
                 print("TA assignment deleted successfully.")

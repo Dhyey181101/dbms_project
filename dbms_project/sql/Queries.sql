@@ -1,1 +1,0 @@
--- SQL file with predefined queries

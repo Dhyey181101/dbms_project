@@ -6,17 +6,17 @@ class ChapterCRUD:
             self.connection = connection
 
     def get_chapter_id_by_name(self, chapter_name):
-        """Retrieve the Chapter ID based on Chaptername."""
+        """Retrieve the chapter_id based on the title."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "SELECT ChapterID FROM Chapter WHERE Chaptername = %s"
+                query = "SELECT chapter_id FROM Chapters WHERE title = %s"
                 cursor.execute(query, (chapter_name,))
                 result = cursor.fetchone()
                 if result:
                     return result[0]
                 else:
-                    print("No chapter found with that name.")
+                    print("No chapter found with that title.")
                     return None
             except Exception as e:
                 print(f"Error fetching chapter ID: {e}")
@@ -24,16 +24,17 @@ class ChapterCRUD:
                 cursor.close()
         return None
 
-    def add_chapter(self, textbook_id, chapter_title, chapter_name, is_hidden=False):
+    def add_chapter(self, textbook_id, chapter_title, is_hidden=False):
         """Add a new chapter to a textbook."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
                 query = """
-                INSERT INTO Chapter (TextbookID, Title, IsHidden)
-                VALUES (%s, %s, %s)
+                INSERT INTO Chapters (textbook_id, chapter_id, title, hidden)
+                VALUES (%s, %s, %s, %s)
                 """
-                cursor.execute(query, (textbook_id, chapter_title, is_hidden))
+                chapter_id = self.generate_chapter_id(textbook_id)
+                cursor.execute(query, (textbook_id, chapter_id, chapter_title, is_hidden))
                 self.connection.commit()
                 print("Chapter added successfully.")
             except Exception as e:
@@ -41,18 +42,39 @@ class ChapterCRUD:
             finally:
                 cursor.close()
 
+    def generate_chapter_id(self, textbook_id):
+        """Generate a new chapter_id based on the textbook_id."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = "SELECT MAX(chapter_id) FROM Chapters WHERE textbook_id = %s"
+                cursor.execute(query, (textbook_id,))
+                result = cursor.fetchone()
+                if result and result[0]:
+                    # Assuming the chapter ID is something like chap01, chap02, etc.
+                    last_id = int(result[0][4:])  # Extract numeric part after 'chap'
+                    new_id = f"chap{str(last_id + 1).zfill(2)}"
+                else:
+                    new_id = "chap01"
+                return new_id
+            except Exception as e:
+                print(f"Error generating chapter ID: {e}")
+            finally:
+                cursor.close()
+        return "chap01"
+
     def get_all_chapters(self, textbook_id, include_hidden=False):
         """Fetch all chapters for a specific textbook, optionally including hidden chapters."""
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = """
-                SELECT ChapterID, Title, IsHidden
-                FROM Chapter
-                WHERE TextbookID = %s
+                SELECT chapter_id, title, hidden
+                FROM Chapters
+                WHERE textbook_id = %s
                 """
                 if not include_hidden:
-                    query += " AND IsHidden = FALSE"
+                    query += " AND hidden = FALSE"
                 cursor.execute(query, (textbook_id,))
                 chapters = cursor.fetchall()
                 return chapters
@@ -63,41 +85,43 @@ class ChapterCRUD:
                 cursor.close()
         return []
       
-    def modify_chapter(self, chapter_name, new_title, new_chaptername, new_is_hidden=None):
-        """Modify a specific chapter by name, with the option to update its hidden status."""
+    def modify_chapter(self, chapter_name, new_title=None, new_is_hidden=None):
+        """Modify a specific chapter by title, with the option to update its hidden status."""
         chapter_id = self.get_chapter_id_by_name(chapter_name)
         if chapter_id and self.connection:
-
             try:
                 cursor = self.connection.cursor()
-                query = """
-                UPDATE Chapter
-                SET Title = %s,
-                """
-                params = [new_title]
+                updates = []
+                values = []
+                
+                if new_title:
+                    updates.append("title = %s")
+                    values.append(new_title)
                 
                 if new_is_hidden is not None:
-                    query += ", IsHidden = %s"
-                    params.append(new_is_hidden)
+                    updates.append("hidden = %s")
+                    values.append(new_is_hidden)
 
-                query += " WHERE ChapterID = %s"
-                params.append(chapter_id)
-                
-                cursor.execute(query, tuple(params))
-                self.connection.commit()
-                print("Chapter modified successfully.")
+                if updates:
+                    query = f"UPDATE Chapters SET {', '.join(updates)} WHERE chapter_id = %s"
+                    values.append(chapter_id)
+                    cursor.execute(query, tuple(values))
+                    self.connection.commit()
+                    print("Chapter modified successfully.")
+                else:
+                    print("No modifications provided.")
             except Exception as e:
                 print(f"Error modifying chapter: {e}")
             finally:
                 cursor.close()
-    
+
     def hide_chapter(self, chapter_name):
-        """Hide a chapter from being displayed by name."""
+        """Hide a chapter from being displayed by title."""
         chapter_id = self.get_chapter_id_by_name(chapter_name)
         if chapter_id and self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "UPDATE Chapter SET IsHidden = %s WHERE ChapterID = %s"
+                query = "UPDATE Chapters SET hidden = %s WHERE chapter_id = %s"
                 cursor.execute(query, (True, chapter_id))
                 self.connection.commit()
                 print("Chapter hidden successfully.")
@@ -107,12 +131,12 @@ class ChapterCRUD:
                 cursor.close()
 
     def show_chapter(self, chapter_name):
-        """Show a previously hidden chapter by name."""
+        """Show a previously hidden chapter by title."""
         chapter_id = self.get_chapter_id_by_name(chapter_name)
         if chapter_id and self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "UPDATE Chapter SET IsHidden = %s WHERE ChapterID = %s"
+                query = "UPDATE Chapters SET hidden = %s WHERE chapter_id = %s"
                 cursor.execute(query, (False, chapter_id))
                 self.connection.commit()
                 print("Chapter is now visible.")

@@ -1,7 +1,7 @@
 from application_flow.flow import Flow
-from database.user import UserCRUD
-from database.course import CourseCRUD
-from database.enrollment import EnrollmentCRUD
+from database.Users import UserCRUD
+from database.Courses import CourseCRUD
+from database.Enrollments import EnrollmentCRUD
 from utils.db_connector import DatabaseConnectionManager
 
 

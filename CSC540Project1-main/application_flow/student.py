@@ -1,9 +1,9 @@
 from application_flow.flow import Flow
-from database.user import *
-from database.course import *
-from database.enrollment import *
-from database.contentblock import *
-from database.section import *
+from database.Users import *
+from database.Courses import *
+from database.Enrollments import *
+from database.ContentBlocks import *
+from database.Sections import *
 from utils.db_connector import *
 from utils.utils import print_list_as_table
 

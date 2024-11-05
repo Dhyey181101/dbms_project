@@ -1,4 +1,4 @@
-from database.user import *
+from database.Users import *
 from utils.db_connector import DatabaseConnectionManager
 
 usercrud = UserCRUD(DatabaseConnectionManager.get_connection())
