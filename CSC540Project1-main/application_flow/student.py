@@ -53,8 +53,19 @@ class StudentFlow(Flow):
                     
     def handle_view_section(self):
         sections = sectioncrud.get_all_sections_associated_with_user(self.user_id)
-        print_list_as_table(headings=['SectionID',"Title"],rows=sections)
-        section_id = int(input("Enter Section ID: "))
+        headings = ['SectionID', 'Title']
+        header_row = " | ".join(headings)
+        print("-" * (len(header_row) + 4))
+        print("| " + header_row + " |")
+        print("-" * (len(header_row) + 4))
+
+        # Print each section in a formatted row
+        for section in sections:
+            row = f"| {section['section_id']} | {section['title']} |"
+            print(row)
+
+        print("-" * (len(header_row) + 4))
+        section_id = input("Enter Section ID: ")
         while True:
             print("\nBlock Menu:")
             print("1. View Block")
@@ -74,7 +85,7 @@ class StudentFlow(Flow):
         content_blocks = contentblockcrud.get_content_blocks_by_section(section_id=section_id)
         headings = ['BlockID', 'ContentType', 'Content', 'SequenceNumber', 'IsHidden']
         print_list_as_table(headings=headings,rows=content_blocks)
-        block_id = int(input("Enter block you want to select: "))
+        block_id = input("Enter block you want to select: ")
         #get block
         #if block is image or picture just display it else
         #else print question, option and take answer input

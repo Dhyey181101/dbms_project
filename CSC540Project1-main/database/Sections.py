@@ -109,19 +109,21 @@ class SectionCRUD:
         return []
 
     def get_all_sections_associated_with_user(self, user_id):
-        """Fetch all sections associated with courses the user is enrolled in."""
+        """Fetch all sections associated with activities the user has participated in."""
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = """
-                SELECT s.section_id, s.title
+                SELECT DISTINCT s.section_id, s.title
                 FROM Sections s
-                JOIN Courses c ON s.textbook_id = c.textbook_id
-                JOIN Enrollments e ON c.course_id = e.course_id
-                WHERE e.student_user_id = %s AND s.hidden = FALSE
+                JOIN Chapters ch ON s.textbook_id = ch.textbook_id AND s.chapter_id = ch.chapter_id
+                JOIN Courses c ON ch.textbook_id = c.textbook_id
+                JOIN StudentActivities sa ON c.course_id = sa.course_id
+                WHERE sa.student_id = %s AND s.hidden = FALSE
                 """
                 cursor.execute(query, (user_id,))
                 sections = cursor.fetchall()
+
                 return sections
             except Exception as e:
                 print(f"Error fetching sections for user {user_id}: {e}")
@@ -129,3 +131,6 @@ class SectionCRUD:
             finally:
                 cursor.close()
         return []
+
+
+
