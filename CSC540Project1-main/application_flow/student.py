@@ -21,7 +21,7 @@ class StudentFlow(Flow):
 
     def print_menu(self):
             while True:
-                print(self.email,self.user_id)
+                
                 if not self.email or not self.user_id:
         
                     print("Student Menu:")
@@ -92,24 +92,69 @@ class StudentFlow(Flow):
 
 
     def handle_enroll(self):
-        email = input("Enter your email: ")
-        user= usercrud.get_user_by_email(email=email)
-        if not user:
-            print("User not found creating new account.")
-            first_name = input("Enter your first name: ")
-            last_name = input("Enter your last name: ")
-            password = input("Enter your password: ")
-            usercrud.create_user(first_name=first_name,last_name=last_name,
-                                 email=email,password=password,role='student')
+        print("Please enter the following details to enroll in a course:")
+
+        # Step 1: Gather student information
+        first_name = input("Enter your First Name: ").strip()
+        last_name = input("Enter your Last Name: ").strip()
+        email = input("Enter your Email: ").strip()
+        course_token = input("Enter the Course Token: ").strip()
+
+        # Step 2: Display menu with Enroll and Go Back options
+        print("\nMenu:")
+        print("1. Enroll")
+        print("2. Go Back")
+        choice = input("Choose an option (1-2): ").strip()
+
+        if choice == "1":
+            # Step 3: Check if the user exists or create a new account if needed
             user = usercrud.get_user_by_email(email=email)
-        course_token = input("")
-        course = coursecrud.find_course_using_token(token=course_token)
-        if not course:
-            print("Course Not Found")
+            
+            if not user:
+                print("User not found. Creating a new account...")
+                password = input("Set your password: ").strip()
+                usercrud.create_user(first_name=first_name, last_name=last_name, email=email, password=password, role="student")
+                user = usercrud.get_user_by_email(email=email)
+                if not user:
+                    print("Error creating user account. Please try again.")
+                    return
+
+            # Step 4: Find the course by token
+            course = coursecrud.find_course_using_token(course_token)
+            if not course:
+                print("Course not found. Please check the course token.")
+                return
+            
+            # Access course_id based on the structure of `course`
+            if isinstance(course, dict):
+                course_id = course.get("course_id")
+            elif isinstance(course, tuple) or isinstance(course, list):
+                course_id = course[0]
+            else:
+                print("Unexpected course format. Unable to retrieve course_id.")
+                return
+
+            if not course_id:
+                print("Invalid course data. Cannot retrieve course ID.")
+                return
+
+            student_user_id = user[0]  # Assuming user[0] is the user ID
+
+            # Step 5: Enroll the student in the course with 'Pending' status
+            enrollment_successful = enrollcrud.enroll_student(course_id=course_id, student_user_id=student_user_id, enrollment_status="Pending")
+
+            if enrollment_successful:
+                print("Enrollment request submitted. You have been added to the waiting list.")
+            else:
+                print("Enrollment request failed. You might already be enrolled in this course.")
+        
+        elif choice == "2":
+            # Go back to the previous menu
+            print("Returning to the previous menu...")
             return
-        course_id = course[0]
-        user_id = user[0]
-        enrollcrud.enroll_student(course_id=course_id, user_id=user_id)
+        else:
+            print("Invalid option. Please select 1 or 2.")
+
 
 
     def handle_sign_in(self):
