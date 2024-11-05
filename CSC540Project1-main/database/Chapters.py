@@ -39,6 +39,7 @@ class ChapterCRUD:
                 print(f"Error adding chapter: {e}")
             finally:
                 cursor.close()
+        return
 
     def generate_chapter_id(self, textbook_id):
         """Generate a new chapter_id based on the textbook_id."""
@@ -66,11 +67,7 @@ class ChapterCRUD:
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
-                query = """
-                SELECT chapter_id AS ChapterID, title AS Title, hidden AS IsHidden
-                FROM Chapters
-                WHERE textbook_id = %s
-                """
+                query = "SELECT chapter_id, title, hidden FROM Chapters WHERE textbook_id = %s"
                 if not include_hidden:
                     query += " AND hidden = FALSE"
                 cursor.execute(query, (textbook_id,))
@@ -82,6 +79,7 @@ class ChapterCRUD:
             finally:
                 cursor.close()
         return []
+
       
     def modify_chapter(self, chapter_name, new_title=None, new_is_hidden=None):
         """Modify a specific chapter by title, with the option to update its hidden status."""
@@ -127,6 +125,7 @@ class ChapterCRUD:
                 print(f"Error hiding chapter: {e}")
             finally:
                 cursor.close()
+
 
     def show_chapter(self, chapter_name):
         """Show a previously hidden chapter by title."""

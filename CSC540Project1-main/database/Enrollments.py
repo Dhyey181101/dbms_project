@@ -62,29 +62,24 @@ class EnrollmentCRUD:
                 cursor.close()
         return []
 
-    def get_course_enrollment(self, course_id, status="Pending"):
-        """Fetches all enrollments for a specific course with a given status."""
+    def get_students_in_course(self, course_id):
+        """Fetch students enrolled in a given course."""
+        course_id = str(course_id)
+        print(course_id)
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = """
-                SELECT 
-                    u.user_id,
-                    u.first_name
-                FROM 
-                    Users u
-                JOIN 
-                    Enrollments e ON u.user_id = e.student_user_id
-                WHERE 
-                    e.enrollment_status = %s 
-                    AND e.course_id = %s
-                    AND u.role = 'Student';
+                SELECT u.user_id, u.first_name, u.last_name, u.email
+                FROM Enrollments e
+                JOIN Users u ON e.student_user_id = u.user_id
+                WHERE e.course_id = %s AND e.enrollment_status = 'Enrolled'
                 """
-                cursor.execute(query, (status, course_id))
-                enrollments = cursor.fetchall()
-                return enrollments
+                cursor.execute(query, (course_id,))
+                students = cursor.fetchall()
+                return students
             except Exception as e:
-                print(f"Error fetching enrollments: {e}")
+                print(f"Error fetching students for course {course_id}: {e}")
                 return []
             finally:
                 cursor.close()

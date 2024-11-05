@@ -2,12 +2,22 @@ from application_flow.flow import Flow
 from database.Users import UserCRUD
 from database.Courses import CourseCRUD
 from database.Enrollments import EnrollmentCRUD
+from database.Chapters import ChapterCRUD
+from database.Textbooks import TextbookCRUD
+from database.Sections import SectionCRUD
+from database.ContentBlocks import ContentBlockCRUD
+from database.Questions import QuestionsCRUD
 from utils.db_connector import DatabaseConnectionManager
 
 
 usercrud = UserCRUD(DatabaseConnectionManager.get_connection())
 coursecrud = CourseCRUD(DatabaseConnectionManager.get_connection())
 enrollmentcrud = EnrollmentCRUD(DatabaseConnectionManager.get_connection())
+chaptercrud= ChapterCRUD(DatabaseConnectionManager.get_connection())
+textbookcrud= TextbookCRUD(DatabaseConnectionManager.get_connection())
+sectioncrud = SectionCRUD(DatabaseConnectionManager.get_connection())
+contentblockcrud= ContentBlockCRUD(DatabaseConnectionManager.get_connection())
+questions_crud=QuestionsCRUD(DatabaseConnectionManager.get_connection())
 
 
 class TAFlow(Flow):
@@ -36,190 +46,449 @@ class TAFlow(Flow):
                 print("Bad Choice")
             
     def handle_go_to_active_course(self):
-        courses = coursecrud.get_all_courses()
-        for i,course in enumerate(courses):
-            print(course)
+        courses = coursecrud.get_all_active_courses()
+        
+        # Print the header
+        print("+-------------------+-----------------------------------------+-----------------+------------+------------+--------------------------+")
+        print("| Course ID         | Course Name                             | Faculty ID      | Start Date | End Date   | Category                |")
+        print("+-------------------+-----------------------------------------+-----------------+------------+------------+--------------------------+")
+    
+        # Print each course in a formatted way
+        for course in courses:
+            print(f"| {course['course_id']:<17} | {course['course_name']:<40} | {course['faculty_user_id']:<15} | {course['start_date']} | {course['end_date']} | {course['course_category']:<22} |")
+    
+        print("+-------------------+-----------------------------------------+-----------------+------------+------------+--------------------------+")
+    
         course_id = input("Enter CourseID of course you want to view: ")
-            
+        
         while True:
             print("1. View Students")
             print("2. Add new chapters")
             print("3. Modify chapters")
             print("4. Go Back")
             choice = int(input("Enter the operation you want to do: "))
-            if choice==1:
+            if choice == 1:
                 self.handle_view_students(course_id)
-            elif choice==2:
+            elif choice == 2:
                 self.handle_add_chapter(course_id)
-            elif choice==3:
-                self.handle_modify_chapter(course_id)
-            elif choice==4:
+            elif choice == 3:
+                self.handle_modify_new_chapter(course_id)
+            elif choice == 4:
                 break
-        
-    def handle_view_students(self, course_id):
-        enrollment = enrollmentcrud.get_course_enrollment(course_id, "approved")
+
     
     def handle_add_chapter(self, course_id):
-        pass
-    
-    def handle_modify_chapter(self, course_id):
-        chapter_id = input("")
+        textbook_id = coursecrud.get_textbook_id_for_course(course_id)
+        print(f"Adding Chapter to {textbook_id}")
+        if textbook_id is None:
+            print("No textbook found for this course.")
+            return
+
+        print("Adding a new chapter...")
+        chapter_id = input("Enter Unique Chapter ID: ")
+        chapter_title = input("Enter Chapter Title: ")
+        chaptercrud.add_chapter(textbook_id,chapter_id,chapter_title)
+        print("Chapter created successfully.")
         while True:
             print("1. Add New Section")
-            print("2. Modify Section")
-            print("3. Go Back")
-            
+            print("2. Go Back")
             choice = int(input("Enter the operation you want to do: "))
-            
-            if choice == 1:
-                self.handle_add_new_section(chapter_id)
-            elif choice == 2:
-                self.handle_modify_section(chapter_id)
-            elif choice == 3:
-                break
-            else:
-                print("Invalid choice. Please enter a number from 1 to 3.")
 
-    # Function stubs
-    def handle_add_new_section(self,chapter_id):
-        # Add logic to add a new section
-        #create section
-        #get id of section
+            if choice == 1:
+                self.handle_add_section(textbook_id,chapter_id)
+            elif choice == 2:
+                print("Going back...")
+                break  # Exit the loop and return to the previous menu
+            else:
+                print("Invalid option, please choose 1 or 2.")
+
+
+    
+    def handle_modify_new_chapter(self, course_id):
+        textbook_id=coursecrud.get_textbook_id_for_course(course_id)
+        print("Modifying a chapter...")
+        chapters = chaptercrud.get_all_chapters(textbook_id)
+
+        if not chapters:
+            print("No chapters available.")
+            return
+
+        chapter_id = input("Enter Chapter ID to modify: ")
+        selected_chapter = next((chapter for chapter in chapters if str(chapter['chapter_id']) == chapter_id), None)
+
+        if selected_chapter:
+            while True:
+                print("\nModify Chapter Menu:")
+                print("1. Add New Section")
+                print("2. Modify Section")
+                print("3. Go Back")
+                print("4. Landing Page")
+                
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
+
+                if choice == 1:
+                    self.handle_add_section(textbook_id, chapter_id)
+                elif choice == 2:
+                    self.handle_modify_section(textbook_id, chapter_id)
+                elif choice == 3:
+                    # Go back to the previous menu
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 4:
+                    # Return to main landing page
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
+        else:
+            print("Chapter ID not found.")
+
+    def handle_add_section(self, textbook_id, chapter_id):
+        print("Adding a new section...")
+        section_number = input("Enter Section Number: ")
+        section_title = input("Enter Section Title: ")
+        sectioncrud.add_section(textbook_id, chapter_id, section_number, section_title)
+        print("Section created successfully.")
+
         while True:
+            print("\nSection Menu:")
             print("1. Add New Content Block")
             print("2. Go Back")
+            print("3. Landing Page")
             
-            choice = int(input("Enter the operation you want to do: "))
-            
-            if choice == 1:
-                self.handle_add_new_content_block(section_id)
-            elif choice == 2:
-                break
-            else:
-                print("Invalid choice. Please enter 1 or 2.")
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
 
-    # Function stub
-    def handle_add_new_content_block(self, section_id):
-        # Add logic to add a new content block
-        #print blocks
-        block_id = input("")
-        while True:
-            print("1. Add Text")
-            print("2. Add Picture")
-            print("3. Add Activity")
-            print("4. Hide Activity")
-            print("5. Go Back")
-            
-            choice = int(input("Enter the operation you want to do: "))
-            
             if choice == 1:
-                self.handle_add_text()
+                # Redirect to Add New Content Block function
+                self.handle_add_content_block(section_number, chapter_id, textbook_id)
             elif choice == 2:
-                self.handle_add_picture()
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break
             elif choice == 3:
-                self.handle_add_activity()
-            elif choice == 4:
-                self.handle_hide_activity()
-            elif choice == 5:
-                break
+                # Go back to the main landing page
+                print("Returning to User Landing Page.")
+                return
             else:
-                print("Invalid choice. Please enter a number from 1 to 5.")
+                print("Invalid choice. Please try again.")
 
-    # Function stubs
-    def handle_add_text(self, block_id):
-        # Add logic to add text
-        pass
+    def handle_modify_section(self, textbook_id, chapter_id):
+        print("Modifying a section...")
+        section_number = input("Enter Section Number to modify: ")
+        sections = sectioncrud.get_sections_by_chapter_and_textbook(chapter_id, textbook_id)  # Updated function
+        selected_section = next((section for section in sections if str(section['section_id']) == section_number), None)
 
-    def handle_add_picture(self, block_id):
-        # Add logic to add a picture
-        pass
+        if selected_section:
+            while True:
+                print("\nModify Section Menu:")
+                print("1. Add New Content Block")
+                print("2. Modify Content Block")
+                print("3. Delete Content Block")
+                print("4. Hide Content Block")
+                print("5. Go Back")
+                print("6. Landing Page")
 
-    def handle_add_activity(self,block_id):
-        # create new activity
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
+
+                if choice == 1:
+                    self.handle_add_content_block(textbook_id, chapter_id, section_number)
+                elif choice == 2:
+                    self.handle_modify_content_block(textbook_id, chapter_id, section_number)
+                elif choice == 3:
+                        content_block_id = input("Enter Content Block ID to delete: ")
+                        contentblockcrud.delete_content_block(textbook_id, chapter_id, section_number, content_block_id)
+                elif choice == 4:
+                        content_block_id = input("Enter Content Block ID to hide: ")
+                        contentblockcrud.hide_content_block(textbook_id, chapter_id, section_number, content_block_id)
+                elif choice == 5:
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 6:
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
+        else:
+            print("Section Number not found.")
+
+    def handle_add_content_block(self, section_id, chapter_id, textbook_id):
         while True:
-            print("1. Add New Question")
-            print("2. Go Back")
+            print("Adding a new content block...")
+            content_block_id = input("Enter Content Block ID: ")
 
-            choice = int(input("Enter the operation you want to do: "))
-
-            if choice == 1:
-                self.handle_add_new_question()
-            elif choice == 2:
-                break
-            else:
-                print("Invalid choice. Please enter 1 or 2.")
-
-    def handle_new_question(self,activity_id):
-        pass
-
-
-    def handle_hide_activity(self):
-        # Add logic to hide an activity
-        pass
-
-    def handle_modify_section(self, chapter_id):
-        # Add logic to modify an existing section
-        section_id = input("")
-        while True:
-            print("1. Add New Content Block")
-            print("2. Modify Content Block")
-            print("3. Delete Content Block")
-            print("4. Hide Content Block")
-            print("5. Go Back")
-            
-            choice = int(input("Enter the operation you want to do: "))
-            
-            if choice == 1:
-                self.handle_add_new_content_block(section_id)
-            elif choice == 2:
-                self.handle_modify_content_block(section_id)
-            elif choice == 3:
-                self.handle_delete_content_block(section_id)
-            elif choice == 4:
-                self.handle_hide_content_block(section_id)
-            elif choice == 5:
-                break
-            else:
-                print("Invalid choice. Please enter a number from 1 to 5.")
-
-
-    def handle_modify_content_block(self,section_id):
-        # Add logic to modify an existing content block
-        print("Blocks")
-        block_id = input("")
-        while True:
+            print("\nContent Block Menu:")
             print("1. Add Text")
             print("2. Add Picture")
             print("3. Add Activity")
             print("4. Go Back")
-            
-            choice = int(input("Enter the operation you want to do: "))
+            print("5. Landing Page")
+
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+
+            if choice == 1:
+                self.handle_add_text(content_block_id, section_id, chapter_id, textbook_id)
+                return
+            elif choice == 2:
+                self.handle_add_picture(content_block_id, section_id, chapter_id, textbook_id)
+                return
+            elif choice == 3:
+                self.handle_add_activity(content_block_id, section_id, chapter_id, textbook_id)
+                return
+            elif choice == 4:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 5:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    ### Function to Add Text
+    def handle_add_text(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Text Content Block...")
+            text_content = input("Enter Text: ")
+
+            print("\nText Menu:")
+            print("1. Add")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
             
             if choice == 1:
-                self.handle_add_text(block_id)
+                # Insert text content block into the database
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "text", text_content)
+                print("Text content block added successfully.")
+                return
             elif choice == 2:
-                self.handle_add_picture(block_id)
-            elif choice == 3:
-                self.handle_add_activity(block_id)
-            elif choice == 4:
+                print("Going back to the previous menu.")
                 break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
             else:
-                print("Invalid choice. Please enter a number from 1 to 5.")
+                print("Invalid choice. Please try again.")
+
+    def handle_add_picture(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Picture Content Block...")
+            picture_content = input("Enter Picture URL or Path: ")
+
+            print("\nPicture Menu:")
+            print("1. Add")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Insert picture content block into the database
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "picture", picture_content)
+                print("Picture content block added successfully.")
+                return
+            elif choice == 2:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    def handle_add_activity(self, content_block_id, section_id, chapter_id, textbook_id):
+        while True:
+            print("Adding Activity Content Block...")
+            activity_id = input("Enter Unique Activity ID: ")
+
+            print("\nActivity Menu:")
+            print("1. Add Question")
+            print("2. Go Back")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+            
+            if choice == 1:
+                # Insert activity content block and then redirect to question addition
+                contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "activity", activity_id)
+                print("Activity content block added successfully.")
+                self.handle_add_question(activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                return
+            elif choice == 2:
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
+
+    def handle_add_question(self, activity_id, content_block_id, section_id, chapter_id, textbook_id):
+        print("Adding a new question...")
+
+        # Collect question details
+        question_id = input("Enter Question ID: ")
+        question_text = input("Enter Question Text: ")
+
+        # Collect options and explanations
+        options = []
+        for i in range(1, 5):
+            option_text = input(f"Enter Option {i} Text: ")
+            option_explanation = input(f"Enter Option {i} Explanation: ")
+            option_label = input(f"Enter Option {i} Label (Correct or Incorrect): ")
+            options.append((option_text, option_explanation, option_label == "Correct"))
+
+        answer = next((i + 1 for i, opt in enumerate(options) if opt[2]), None)  # Find the correct option index
+
+        while True:
+            print("\nQuestion Menu:")
+            print("1. Save")
+            print("2. Cancel")
+            print("3. Landing Page")
+
+            choice = int(input("Choose an option: "))
+
+            if choice == 1:
+                # Save question to database
+                questions_crud.add_question(
+                    question_id, textbook_id, chapter_id, section_id, content_block_id, activity_id,
+                    question_text, options, answer
+                )
+                print("Question saved successfully.")
+                return
+            elif choice == 2:
+                print("Canceling and going back to Add Activity page.")
+                break
+            elif choice == 3:
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
 
 
-    def handle_delete_content_block(self, section_id):
-        # Add logic to delete a content block
-        pass
+    def handle_modify_content_block(self, textbook_id, chapter_id, section_number):
+        print("Modifying a content block...")
+        content_blocks = contentblockcrud.get_content_blocks_by_section(textbook_id, chapter_id, section_number)
 
-    def handle_hide_content_block(self, section_id):
-        # Add logic to hide a content block
-        pass
+        if not content_blocks:
+            print("No content blocks found for this section.")
+            return
 
+        content_block_id = input("Enter Content Block ID to modify: ")
+        selected_block = next((block for block in content_blocks if str(block['content_block_id']) == content_block_id), None)
 
-        
+        if selected_block:
+            while True:
+                print("\nModify Content Block Menu:")
+                print("1. Add Text")
+                print("2. Add Picture")
+                print("3. Add New Activity")
+                print("4. Go Back")
+                print("5. Landing Page")
+
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
+
+                if choice == 1:
+                    # Use the existing function to handle adding text content
+                    self.handle_add_text(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 2:
+                    # Use the existing function to handle adding picture content
+                    self.handle_add_picture(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 3:
+                    # Use the existing function to handle adding activity content
+                    self.handle_add_activity(content_block_id, section_number, chapter_id, textbook_id)
+                    return
+                elif choice == 4:
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 5:
+                    print("Returning to User Landing Page.")
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
+        else:
+            print("Content Block ID not found.")
+    
+    def handle_view_students(self, course_id):
+        students = enrollmentcrud.get_students_in_course(course_id)
+
+        if not students:
+            print(f"No students found for this {course_id}.")
+            return
+
+        # Print the header
+        print("+----------+------------+-----------+---------------------+")
+        print("| user_id  | first_name | last_name | email               |")
+        print("+----------+------------+-----------+---------------------+")
+
+        # Print each student's information with proper alignment
+        for student in students:
+            print(f"| {student['user_id']:<10} | {student['first_name']:<10} | {student['last_name']:<9} | {student['email']:<19} |")
+
+        # Print the footer
+        print("+----------+------------+-----------+---------------------+")
 
     def handle_view_courses(self):
-        pass
+        """Display all courses in a formatted table with dynamic widths."""
+        courses = coursecrud.get_all_courses()  
+
+        if not courses:
+            print("No courses found.")
+            return
+
+        # Calculate maximum width for each column
+        headers = ['Course ID', 'Course Name', 'Faculty ID', 'Start Date', 'End Date', 'Category']
+        max_widths = [len(header) for header in headers]
+
+        for course in courses:
+            max_widths[0] = max(max_widths[0], len(course['course_id']))
+            max_widths[1] = max(max_widths[1], len(course['course_name']))
+            max_widths[2] = max(max_widths[2], len(course['faculty_user_id']))
+            max_widths[3] = max(max_widths[3], len(str(course['start_date'])))
+            max_widths[4] = max(max_widths[4], len(str(course['end_date'])))
+            max_widths[5] = max(max_widths[5], len(course['course_category']))
+
+        # Print the header
+        header_line = '+' + '+'.join('-' * (width + 2) for width in max_widths) + '+'
+        print(header_line)
+        header_format = '| ' + ' | '.join(f'{{:<{width}}}' for width in max_widths) + ' |'
+        print(header_format.format(*headers))
+        print(header_line)
+
+        for course in courses:
+            print(header_format.format(
+                course['course_id'],
+                course['course_name'],
+                course['faculty_user_id'],
+                str(course['start_date']),
+                str(course['end_date']),
+                course['course_category']
+            ))
+
+        print(header_line)
+
+
+
 
     def handle_change_password(self):
         user = usercrud.fetch_user_using_email(email=self.email, role='teaching_assistant')

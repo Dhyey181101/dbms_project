@@ -73,6 +73,27 @@ class CourseCRUD:
                 cursor.close()
         return []
 
+    def get_all_active_courses(self):
+        """Fetch all active courses from the database."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = """
+                    SELECT course_id, course_name, faculty_user_id, start_date, end_date, course_category
+                    FROM Courses
+                    WHERE course_category = 'Active';
+                """
+                cursor.execute(query)
+                courses = cursor.fetchall()
+                return courses
+            except Exception as e:
+                print(f"Error fetching courses: {e}")
+                return []
+            finally:
+                cursor.close()
+        return []
+
+
     def find_course_using_token(self, access_token):
         """Finds a course by its access token."""
         if self.connection:
@@ -88,3 +109,19 @@ class CourseCRUD:
                 return None
             finally:
                 cursor.close()
+    
+    def get_textbook_id_for_course(self, course_id):
+        """Fetch the textbook ID for a given course from the database."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = "SELECT textbook_id FROM Courses WHERE course_id = %s"
+                cursor.execute(query, (course_id,))
+                result = cursor.fetchone()
+                return result['textbook_id'] if result else None
+            except Exception as e:
+                print(f"Error fetching textbook ID: {e}")
+                return None
+            finally:
+                cursor.close()
+        return None

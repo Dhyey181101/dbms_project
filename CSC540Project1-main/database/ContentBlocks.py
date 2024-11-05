@@ -63,16 +63,14 @@ class ContentBlockCRUD:
                 """
                 cursor.execute(query, (textbook_id, chapter_id, section_number, content_block_id, block_type, content, hidden))
                 self.connection.commit()
-                print("Content block created successfully.")
             except Exception as e:
                 print(f"Error creating content block: {e}")
             finally:
                 cursor.close()
 
-    def modify_content_block(self, content, textbook_id, chapter_id, section_number, content_block_id, new_block_type=None, new_content=None, new_hidden=None):
-        """Modify a content block's details using content as identifier."""
-        block_id = self.get_block_id_by_content(content, section_number, chapter_id, textbook_id)
-        if block_id and self.connection:
+    def modify_content_block(self, content_block_id, textbook_id, chapter_id, section_number, new_block_type=None, new_content=None, new_hidden=None):
+        """Modify a content block's details using its ID."""
+        if self.connection:
             try:
                 cursor = self.connection.cursor()
                 updates = []
@@ -103,20 +101,42 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
 
-    def delete_content_block(self, content, section_id, chapter_id, textbook_id):
-        """Delete a content block from the database using content as identifier."""
-        block_id = self.get_block_id_by_content(content, section_id, chapter_id, textbook_id)
-        if block_id and self.connection:
+    def delete_content_block(self, textbook_id, chapter_id, section_number, content_block_id):
+        """Delete a content block from the ContentBlocks table."""
+        if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "DELETE FROM ContentBlocks WHERE content_block_id = %s AND section_number = %s AND chapter_id = %s AND textbook_id = %s"
-                cursor.execute(query, (block_id, section_id, chapter_id, textbook_id))
+                query = """
+                DELETE FROM ContentBlocks
+                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s AND content_block_id = %s
+                """
+                cursor.execute(query, (textbook_id, chapter_id, section_number, content_block_id))
                 self.connection.commit()
                 print("Content block deleted successfully.")
             except Exception as e:
                 print(f"Error deleting content block: {e}")
             finally:
                 cursor.close()
+    
+    def hide_content_block(self, textbook_id, chapter_id, section_number, content_block_id):
+        """Hide a content block by setting its hidden attribute to True."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = """
+                UPDATE ContentBlocks
+                SET hidden = TRUE
+                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s AND content_block_id = %s
+                """
+                cursor.execute(query, (textbook_id, chapter_id, section_number, content_block_id))
+                self.connection.commit()
+                print("Content block hidden successfully.")
+            except Exception as e:
+                print(f"Error hiding content block: {e}")
+            finally:
+                cursor.close()
+
+
 
     def handle_view_block(self, section_id):
         # Fetch the section details using section_id
@@ -141,21 +161,6 @@ class ContentBlockCRUD:
             print("Invalid section ID.")
 
 
-    def hide_content_block(self, content, section_id, chapter_id, textbook_id):
-        """Hide a content block from being displayed using content as identifier."""
-        block_id = self.get_block_id_by_content(content, section_id, chapter_id, textbook_id)
-        if block_id and self.connection:
-            try:
-                cursor = self.connection.cursor()
-                query = "UPDATE ContentBlocks SET hidden = %s WHERE content_block_id = %s AND section_number = %s AND chapter_id = %s AND textbook_id = %s"
-                cursor.execute(query, (True, block_id, section_id, chapter_id, textbook_id))
-                self.connection.commit()
-                print("Content block hidden successfully.")
-            except Exception as e:
-                print(f"Error hiding content block: {e}")
-            finally:
-                cursor.close()
-
     def show_content_block(self, content, section_id, chapter_id, textbook_id):
         """Show a previously hidden content block using content as identifier."""
         block_id = self.get_block_id_by_content(content, section_id, chapter_id, textbook_id)
@@ -171,31 +176,19 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
 
-    def get_content_blocks_by_section(self, section_id, include_hidden=False):
-        """Retrieve all content blocks for a given section based on section_id."""
+    def get_content_blocks_by_section(self, textbook_id, chapter_id, section_number, include_hidden=False):
+        """Retrieve all content blocks for a given section based on textbook, chapter, and section."""
         if self.connection:
-            # Fetch section details using section_id
-            section_details = self.get_section_details_by_id(section_id)
-            if not section_details:
-                print("Invalid section ID.")
-                return []
-
-            textbook_id = section_details['textbook_id']
-            chapter_id = section_details['chapter_id']
-            section_id = section_details['section_id']
-
             try:
-                cursor = self.connection.cursor()
+                cursor = self.connection.cursor(dictionary=True)
                 query = """
                 SELECT content_block_id, content_type, content, section_number, hidden
                 FROM ContentBlocks
                 WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s
                 """
-                # Adjust the query if you want to include hidden blocks
                 if not include_hidden:
                     query += " AND hidden = FALSE"
-
-                cursor.execute(query, (textbook_id, chapter_id, section_id))
+                cursor.execute(query, (textbook_id, chapter_id, section_number))
                 results = cursor.fetchall()
                 return results
             except Exception as e:
@@ -203,4 +196,3 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
         return []
-
