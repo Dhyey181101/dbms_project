@@ -140,7 +140,7 @@ CREATE TABLE StudentActivities (
     unique_activity_id VARCHAR(10) NOT NULL,
     question_id VARCHAR(10) NOT NULL,
     points INT DEFAULT 0 CHECK (points >= 0),
-    activity_timestamp DATETIME NOT NULL,
+    activity_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     PRIMARY KEY (student_id, course_id, unique_activity_id, question_id),
     
