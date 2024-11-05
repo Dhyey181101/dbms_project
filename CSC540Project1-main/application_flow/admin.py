@@ -325,10 +325,13 @@ class AdminFlow(Flow):
 
             if choice == 1:
                 self.handle_add_text(content_block_id, section_id, chapter_id, textbook_id)
+                return
             elif choice == 2:
                 self.handle_add_picture(content_block_id, section_id, chapter_id, textbook_id)
+                return
             elif choice == 3:
                 self.handle_add_activity(content_block_id, section_id, chapter_id, textbook_id)
+                return
             elif choice == 4:
                 print("Going back to the previous menu.")
                 break
