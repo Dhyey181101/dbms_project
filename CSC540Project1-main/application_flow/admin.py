@@ -21,9 +21,10 @@ enrollmentcrud = EnrollmentCRUD(DatabaseConnectionManager.get_connection())
 
 class AdminFlow(Flow):
     def __init__(self, user_id, email):
+        super().__init__(user_id, email)  
         self.operation = -1
         self.logout = False
-        super().__init__(user_id, email)
+        self.user_id = user_id  
 
     def print_menu(self):
         while True:
@@ -53,42 +54,103 @@ class AdminFlow(Flow):
                 print("Invalid choice. Please try again.")
 
     def handle_create_faculty_account(self):
-        print("Creating a faculty account...")
-        first_name = input("Enter First Name: ")
-        last_name = input("Enter Last Name: ")
-        email = input("Enter Email: ")
-        password = input("Enter Password: ")
-        role = "faculty"
-        usercrud.create_user(first_name, last_name, email, password, role)
+        while True:
+            # Display menu options first
+            print("\nCreate a Faculty Account Menu:")
+            print("1. Add a Faculty User")
+            print("2. Go Back")
+            
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+            
+            if choice == 1:
+                # Ask for faculty details and save to the database
+                print("Enter Faculty Account Details:")
+                first_name = input("Enter First Name: ")
+                last_name = input("Enter Last Name: ")
+                email = input("Enter Email: ")
+                password = input("Enter Password: ")
+                role = "faculty"
+                
+                usercrud.create_user(first_name, last_name, email, password, role)
+                print("Faculty account created successfully.")
+                break  # Go back to the previous menu after adding the user
+            elif choice == 2:
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break
+            else:
+                print("Invalid choice. Please select 1 or 2.")
 
     def handle_create_textbook(self):
         print("Creating an E-textbook...")
+        # Prompt for textbook ID and title
         title = input("Enter E-textbook title: ")
+        textbook_id = input("Enter E-textbook ID: ")
         admin_id = self.user_id
         is_hidden = input("Is the textbook hidden? (yes/no): ").strip().lower() == 'yes'
-        textbookcrud.create_etextbook(title, admin_id, is_hidden)
-        textbook_id = textbookcrud.get_textbook_id_by_title(title)
-        
-        if textbook_id:
-            self.textbook_menu(textbook_id)
-        else:
-            print("Failed to retrieve textbook ID.")
+                
+        # Pass the textbook_id as an argument in the create_etextbook method
+        textbookcrud.create_etextbook(textbook_id, title, admin_id, is_hidden)        
+        while True:
+            # Display menu options first
+            print("\nCreate E-Textbook Menu:")
+            print("1. Add New Chapter")
+            print("2. Go Back")
+
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+            if choice == 1:
+                # # Check if the textbook was created successfully
+                # created_textbook_id = textbookcrud.get_textbook_id_by_title(title)
+                # if created_textbook_id:
+                self.textbook_menu(textbook_id)
+                # else:
+                #     print("Failed to retrieve textbook ID.")
+            elif choice == 2:
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break
+            else:
+                print("Invalid choice. Please select 1 or 2.")                
 
     def textbook_menu(self, textbook_id):
-        print("\nE-textbook Menu:")
-        print("1. Add New Chapter")
-        print("2. Modify Chapter")
-        print("3. Go Back")
-        choice = int(input("Enter your choice: "))
+        print("Creating New Chapter")
+        # Correctly pass `textbook_id` to `handle_add_new_chapter`
+        chapter_id = self.handle_add_new_chapter(textbook_id)
         
-        if choice == 1:
-            self.handle_add_new_chapter(textbook_id)
-        elif choice == 2:
-            self.handle_modify_new_chapter(textbook_id)
-        elif choice == 3:
+        if not chapter_id:
+            print("Failed to create a chapter. Returning to Admin Home page.")
             return
-        else:
-            print("Invalid choice.")
+
+        while True:        
+            print("\nChapter Menu:")
+            print("1. Add New Section")
+            print("2. Go Back")
+            print("3. Admin Home page")
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+
+            if choice == 1:
+                # Correctly pass `textbook_id` and `chapter_id` to `handle_add_section`
+                self.handle_add_section(textbook_id, chapter_id)
+            elif choice == 2:
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                return
+            else:
+                print("Invalid choice.")
 
     def handle_modify_textbook(self):
         print("Modifying an E-textbook...")
@@ -98,49 +160,114 @@ class AdminFlow(Flow):
             print("No textbooks available.")
             return
 
-        title = input("Enter E-textbook title to modify: ")
-        textbook_id = textbookcrud.get_textbook_id_by_title(title)
-        
-        if textbook_id:
-            self.textbook_menu(textbook_id)
-        else:
-            print("Textbook not found.")
+        # title = input("Enter E-textbook title to modify: ")
+        textbook_id = input("Enter Unique E-textbook ID to modify: ")
+        while True:        
+            print("\nChapter Menu:")
+            print("1. Add New Chapter")
+            print("2. Modify Chapter")
+            print("3. Go Back")
+            print("4. Admin Home page")
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue                    
+            if choice == 1:
+                self.textbook_menu(textbook_id)
+            elif choice == 2:
+                self.handle_modify_new_chapter(textbook_id)
+            elif choice == 3:
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break                
+            elif choice == 4:
+                return
+            else:
+                print("Invalid choice.")
 
     def handle_add_new_chapter(self, textbook_id):
         print("Adding a new chapter...")
+        chapter_id = input("Enter Chapter ID: ")        
         chapter_title = input("Enter Chapter Title: ")
-        chapter_name = input("Enter Chapter Name: ")
-        chaptercrud.add_chapter(textbook_id, chapter_title, chapter_name)
+        # Pass parameters in correct order to `add_chapter`
+        chaptercrud.add_chapter(textbook_id, chapter_id, chapter_title)
+        print("Chapter created successfully.")
+        return chapter_id
 
     def handle_modify_new_chapter(self, textbook_id):
         print("Modifying a chapter...")
         chapters = chaptercrud.get_all_chapters(textbook_id)
-        
+
         if not chapters:
             print("No chapters available.")
             return
 
         chapter_id = input("Enter Chapter ID to modify: ")
         selected_chapter = next((chapter for chapter in chapters if str(chapter['ChapterID']) == chapter_id), None)
-        
+
         if selected_chapter:
-            new_title = input("Enter new Chapter Title: ") or selected_chapter['Title']
-            new_chapter_name = input("Enter new Chapter Name: ") or selected_chapter['Chaptername']
-            chaptercrud.modify_chapter(chapter_id, new_title, new_chapter_name)
+            while True:
+                print("\nModify Chapter Menu:")
+                print("1. Add New Section")
+                print("2. Modify Section")
+                print("3. Go Back")
+                print("4. Landing Page")
+                
+                try:
+                    choice = int(input("Choose an option: "))
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+                    continue
+
+                if choice == 1:
+                    self.handle_add_section(textbook_id, chapter_id)
+                elif choice == 2:
+                    self.handle_modify_section(chapter_id)
+                elif choice == 3:
+                    # Go back to the previous menu
+                    print("Going back to the previous menu.")
+                    break
+                elif choice == 4:
+                    # Return to main landing page
+                    return
+                else:
+                    print("Invalid choice. Please try again.")
         else:
             print("Chapter ID not found.")
 
-    def handle_add_section(self, chapter_id):
+    def handle_add_section(self, textbook_id, chapter_id):
         print("Adding a new section...")
         section_number = input("Enter Section Number: ")
         section_title = input("Enter Section Title: ")
-        sectioncrud.add_section(chapter_id, section_number, section_title)
-        sections = sectioncrud.get_sections_by_chapter(chapter_id)
-        
-        if sections:
-            self.section_menu(sections[-1]["SectionID"])
-        else:
-            print("Failed to retrieve section ID.")
+        sectioncrud.add_section(textbook_id, chapter_id, section_number, section_title)
+        print("Section created successfully.")
+
+        while True:
+            print("\nSection Menu:")
+            print("1. Add New Content Block")
+            print("2. Go Back")
+            print("3. Landing Page")
+            
+            try:
+                choice = int(input("Choose an option: "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                continue
+
+            if choice == 1:
+                # Redirect to Add New Content Block function
+                self.handle_add_content_block(section_number, chapter_id, textbook_id)
+            elif choice == 2:
+                # Go back to the previous menu
+                print("Going back to the previous menu.")
+                break
+            elif choice == 3:
+                # Go back to the main landing page
+                print("Returning to User Landing Page.")
+                return
+            else:
+                print("Invalid choice. Please try again.")
 
     def handle_modify_section(self):
         print("Modifying a section...")

@@ -1,4 +1,5 @@
 from utils.db_connector import DatabaseConnectionManager
+import time
 
 class TextbookCRUD:
     
@@ -25,18 +26,19 @@ class TextbookCRUD:
                 cursor.close()
         return None
 
-    def create_etextbook(self, title, admin_id, is_hidden=False):
-        """Create a new e-textbook with an optional hidden status."""
+    def create_etextbook(self, textbook_id, title, admin_id, is_hidden=False):
+        """Create a new e-textbook with a given ID, title, and hidden status."""
         if self.connection:
             try:
                 cursor = self.connection.cursor()
                 query = """
-                INSERT INTO Textbooks (title, created_by_admin, hidden)
-                VALUES (%s, %s, %s)
+                INSERT INTO Textbooks (textbook_id, title, created_by_admin, hidden)
+                VALUES (%s, %s, %s, %s)
                 """
-                cursor.execute(query, (title, admin_id, is_hidden))
+                cursor.execute(query, (textbook_id, title, admin_id, is_hidden))
                 self.connection.commit()
                 print("E-textbook created successfully.")
+                time.sleep(0.1)  # Pause briefly to allow DB to process
             except Exception as e:
                 print(f"Error creating e-textbook: {e}")
             finally:

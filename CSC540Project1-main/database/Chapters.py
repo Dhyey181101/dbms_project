@@ -24,7 +24,7 @@ class ChapterCRUD:
                 cursor.close()
         return None
 
-    def add_chapter(self, textbook_id, chapter_title, is_hidden=False):
+    def add_chapter(self, textbook_id, chapter_id, chapter_title, is_hidden=False):
         """Add a new chapter to a textbook."""
         if self.connection:
             try:
@@ -33,10 +33,8 @@ class ChapterCRUD:
                 INSERT INTO Chapters (textbook_id, chapter_id, title, hidden)
                 VALUES (%s, %s, %s, %s)
                 """
-                chapter_id = self.generate_chapter_id(textbook_id)
                 cursor.execute(query, (textbook_id, chapter_id, chapter_title, is_hidden))
                 self.connection.commit()
-                print("Chapter added successfully.")
             except Exception as e:
                 print(f"Error adding chapter: {e}")
             finally:
@@ -69,7 +67,7 @@ class ChapterCRUD:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = """
-                SELECT chapter_id, title, hidden
+                SELECT chapter_id AS ChapterID, title AS Title, hidden AS IsHidden
                 FROM Chapters
                 WHERE textbook_id = %s
                 """

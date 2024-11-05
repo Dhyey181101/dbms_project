@@ -36,11 +36,11 @@ class SectionCRUD:
                 """
                 cursor.execute(query, (textbook_id, section_id, chapter_id, section_title, is_hidden))
                 self.connection.commit()
-                print("Section created successfully.")
             except Exception as e:
                 print(f"Error creating section: {e}")
             finally:
                 cursor.close()
+
 
     def modify_section(self, section_title, chapter_id, textbook_id, new_section_id=None, new_section_title=None, new_hidden=None):
         """Modify a section's details using the title, chapter_id, and textbook_id as identifiers."""
