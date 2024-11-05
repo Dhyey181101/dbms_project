@@ -5,6 +5,30 @@ class ContentBlockCRUD:
         if DatabaseConnectionManager.check_if_connected():
             self.connection = connection
 
+    def get_section_details_by_id(self, section_id):
+        """Retrieve textbook_id, chapter_id, and section_id based on section_id."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = """
+                SELECT textbook_id, chapter_id, section_id
+                FROM Sections
+                WHERE section_id = %s
+                """
+                cursor.execute(query, (section_id,))
+                result = cursor.fetchone()
+
+                # Read all remaining results to avoid unread result error
+                cursor.fetchall()  # Ensure cursor is clear of unread results
+
+                return result if result else None
+            except Exception as e:
+                print(f"Error fetching section details by ID: {e}")
+                return None
+            finally:
+                cursor.close()
+        return None
+
     def get_block_id_by_content(self, content, section_id, chapter_id, textbook_id):
         """Retrieve the content_block_id based on content, section_id, chapter_id, and textbook_id."""
         if self.connection:
@@ -13,7 +37,7 @@ class ContentBlockCRUD:
                 query = """
                 SELECT content_block_id 
                 FROM ContentBlocks 
-                WHERE content = %s AND section_number = %s AND chapter_id = %s AND textbook_id = %s
+                WHERE content = %s AND section_id = %s AND chapter_id = %s AND textbook_id = %s
                 """
                 cursor.execute(query, (content, section_id, chapter_id, textbook_id))
                 result = cursor.fetchone()
@@ -94,28 +118,29 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
 
-    def get_content_blocks_by_section(self, textbook_id, chapter_id, section_number, include_hidden=False):
-        """Fetch all content blocks for a given section ID."""
-        if self.connection:
-            try:
-                cursor = self.connection.cursor(dictionary=True)
-                query = """
-                SELECT content_block_id, content_type, content 
-                FROM ContentBlocks 
-                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s
-                """
-                if not include_hidden:
-                    query += " AND hidden = FALSE"
-                cursor.execute(query, (textbook_id, chapter_id, section_number))
-                content_blocks = cursor.fetchall()
-                return content_blocks
-            except Exception as e:
-                print(f"Error fetching content blocks: {e}")
-                return []
-            finally:
-                cursor.close()
-        return []
-    
+    def handle_view_block(self, section_id):
+        # Fetch the section details using section_id
+        section_details = sectioncrud.get_section_details_by_id(section_id)
+        if section_details:
+            # Extract textbook_id, chapter_id, and section_number from the details
+            textbook_id = section_details['textbook_id']
+            chapter_id = section_details['chapter_id']
+            section_number = section_details['section_number']
+
+            # Fetch content blocks
+            content_blocks = contentblockcrud.get_content_blocks_by_section(
+                textbook_id=textbook_id,
+                chapter_id=chapter_id,
+                section_number=section_number
+            )
+
+            # Prepare to print the content blocks in a formatted table
+            headings = ['BlockID', 'ContentType', 'Content', 'SequenceNumber', 'IsHidden']
+            print_list_as_table(headings=headings, rows=content_blocks)
+        else:
+            print("Invalid section ID.")
+
+
     def hide_content_block(self, content, section_id, chapter_id, textbook_id):
         """Hide a content block from being displayed using content as identifier."""
         block_id = self.get_block_id_by_content(content, section_id, chapter_id, textbook_id)
@@ -145,3 +170,37 @@ class ContentBlockCRUD:
                 print(f"Error showing content block: {e}")
             finally:
                 cursor.close()
+
+    def get_content_blocks_by_section(self, section_id, include_hidden=False):
+        """Retrieve all content blocks for a given section based on section_id."""
+        if self.connection:
+            # Fetch section details using section_id
+            section_details = self.get_section_details_by_id(section_id)
+            if not section_details:
+                print("Invalid section ID.")
+                return []
+
+            textbook_id = section_details['textbook_id']
+            chapter_id = section_details['chapter_id']
+            section_id = section_details['section_id']
+
+            try:
+                cursor = self.connection.cursor()
+                query = """
+                SELECT content_block_id, content_type, content, section_number, hidden
+                FROM ContentBlocks
+                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s
+                """
+                # Adjust the query if you want to include hidden blocks
+                if not include_hidden:
+                    query += " AND hidden = FALSE"
+
+                cursor.execute(query, (textbook_id, chapter_id, section_id))
+                results = cursor.fetchall()
+                return results
+            except Exception as e:
+                print(f"Error fetching content blocks: {e}")
+            finally:
+                cursor.close()
+        return []
+
