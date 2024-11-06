@@ -34,28 +34,48 @@ def display_query_menu():
 def execute_query(query_number):
     """Execute the selected query and print the results."""
     if query_number == 1:
-        print("Number of sections in the first chapter:", db_queries.get_first_chapter_section_count())
+        # Query 1: Number of sections in the first chapter of a textbook
+        section_count = db_queries.get_first_chapter_section_count(textbook_id=101)  # assuming textbook ID is 101
+        print("Number of sections in the first chapter:", section_count)
     elif query_number == 2:
-        for record in db_queries.get_faculty_and_tas():
-            print(record['Name'], "-", record['Role'])
+        results = db_queries.get_faculty_and_tas()
+        print("Faculty and TAs:")
+        for record in results:
+            print(f"{record['name']} - {record['role']}")
     elif query_number == 3:
-        for course in db_queries.get_active_courses_with_faculty_and_student_count():
-            print(f"Course ID: {course['CourseID']}, Faculty: {course['Faculty']}, Students: {course['StudentCount']}")
+        # Query 3: Active courses with faculty and total student count
+        results = db_queries.get_active_courses_with_faculty_and_student_count()
+        print("Active Courses with Faculty and Student Count:")
+        for course in results:
+            print(f"Course ID: {course['course_id']}, Faculty: {course['faculty']}, Students: {course['student_count']}")
     elif query_number == 4:
+        # Query 4: Course with the largest waiting list
         result = db_queries.get_course_with_largest_waiting_list()
-        print(f"Course ID: {result['CourseID']}, Waiting List Count: {result['WaitingListCount']}")
+        if result:
+            print(f"Course ID: {result['course_id']}, Waiting List Count: {result['waiting_list_count']}")
+        else:
+            print("No courses with a waiting list found.")
     elif query_number == 5:
-        content = db_queries.get_chapter_content(101, 2)
-        print("Chapter Content:", "\n".join(content))
+        # Query 5: Contents of Chapter 02 of textbook 101
+        content = db_queries.get_chapter_content(textbook_id=101, chapter_id="Chap02")
+        print("Chapter 02 Content:")
+        print("\n".join(content))
     elif query_number == 6:
-        answers = db_queries.get_incorrect_answers_for_activity_question(activity_id=0, question_id=2)
+        # Query 6: Incorrect answers and explanations for a specific question in an activity
+        answers = db_queries.get_incorrect_answers_for_activity_question(textbook_id=101, chapter_id="Chap01", section_id="Sec02", activity_id="ACT0", question_id="Q2")
+        print("Incorrect Answers and Explanations:")
         for answer in answers:
-            print(f"Incorrect Answer: {answer['IncorrectAnswer']}, Explanation: {answer['Explanation']}")
+            print(f"Incorrect Answer: {answer['answer']}, Explanation: {answer['explanation']}")
     elif query_number == 7:
+         # Query 7: Books with different statuses by different instructors
         results = db_queries.find_books_in_different_status_by_instructors()
-        for result in results:
-            print(f"TextbookID: {result['TextbookID']}, Instructor1: {result['Instructor1']} (Status: {result['Status1']}), "
-                  f"Instructor2: {result['Instructor2']} (Status: {result['Status2']})")
+        if results:
+            print("Books with Different Statuses by Different Instructors:")
+            for result in results:
+                print(f"Textbook ID: {result['textbook_id']}, Instructor1: {result['instructor1']} (Status: {result['status1']}), "
+                    f"Instructor2: {result['instructor2']} (Status: {result['status2']})")
+        else:
+            print("No books with different statuses by different instructors found.")
     elif query_number == 0:
         return
     else:

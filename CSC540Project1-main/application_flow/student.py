@@ -79,7 +79,7 @@ class StudentFlow(Flow):
                     if choice==1:
                         self.handle_view_section()
                     elif choice==2:
-                        self.handle_sign_in()
+                        self.view_participation_points()
                     elif choice==3:
                         self.handle_logout()
                         break
@@ -126,7 +126,20 @@ class StudentFlow(Flow):
                 print("Invalid choice. Please select again.")
                 continue
                 
-    
+
+    def view_participation_points(self):
+        """Display the total participation points and a go-back option."""
+        total_points = studentactivitycrud.get_total_participation_points(self.user_id)
+        print(f"\nTotal Participation Activity Points: {total_points}")
+        
+        # Display the menu to go back
+        print("\n1. Go back")
+        choice = int(input("Enter your choice (1): "))
+        
+        if choice == 1:
+            print("Returning to the main menu...")
+
+
     def handle_view_block(self, course_id, textbook_id, chapter_id, section_id):
         """Fetch and display content blocks based on user inputs for course, textbook, chapter, and section."""
         # Fetch content blocks based on provided course, textbook, chapter, and section
