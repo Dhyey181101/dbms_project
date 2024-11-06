@@ -137,3 +137,41 @@ class CourseCRUD:
             textbooks = cursor.fetchall()
             cursor.close()
             return textbooks
+
+
+    def get_course_by_id(self, course_id):
+        """Fetch a course by its ID."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = "SELECT * FROM Courses WHERE course_id = %s"
+                cursor.execute(query, (course_id,))
+                course = cursor.fetchone()
+                return course
+            except Exception as e:
+                print(f"Error fetching course by ID: {e}")
+                return None
+            finally:
+                cursor.close()
+        return None
+
+    def get_courses_by_faculty(self, faculty_user_id):
+        """Fetch all courses assigned to a specific faculty member."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = """
+                    SELECT course_id, course_name, start_date, end_date, course_category
+                    FROM Courses
+                    WHERE faculty_user_id = %s
+                """
+                cursor.execute(query, (faculty_user_id,))
+                courses = cursor.fetchall()
+                return courses
+            except Exception as e:
+                print(f"Error fetching courses for faculty {faculty_user_id}: {e}")
+                return []
+            finally:
+                cursor.close()
+        return []
+

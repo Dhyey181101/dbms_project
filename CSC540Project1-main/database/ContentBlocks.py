@@ -101,38 +101,31 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
 
-    def delete_content_block(self, textbook_id, chapter_id, section_number, content_block_id):
-        """Delete a content block from the ContentBlocks table."""
+    def delete_content_block(self, content_block_id):
         if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = """
-                DELETE FROM ContentBlocks
-                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s AND content_block_id = %s
-                """
-                cursor.execute(query, (textbook_id, chapter_id, section_number, content_block_id))
+                query = "DELETE FROM ContentBlocks WHERE content_block_id = %s"
+                cursor.execute(query, (content_block_id,))
                 self.connection.commit()
-                print("Content block deleted successfully.")
+                return True
             except Exception as e:
                 print(f"Error deleting content block: {e}")
+                return False
             finally:
                 cursor.close()
     
-    def hide_content_block(self, textbook_id, chapter_id, section_number, content_block_id):
-        """Hide a content block by setting its hidden attribute to True."""
+    def hide_content_block(self, content_block_id):
         if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = """
-                UPDATE ContentBlocks
-                SET hidden = TRUE
-                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s AND content_block_id = %s
-                """
-                cursor.execute(query, (textbook_id, chapter_id, section_number, content_block_id))
+                query = "UPDATE ContentBlocks SET hidden = TRUE WHERE content_block_id = %s"
+                cursor.execute(query, (content_block_id,))
                 self.connection.commit()
-                print("Content block hidden successfully.")
+                return True
             except Exception as e:
                 print(f"Error hiding content block: {e}")
+                return False
             finally:
                 cursor.close()
 

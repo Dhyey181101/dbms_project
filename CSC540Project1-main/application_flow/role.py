@@ -51,20 +51,23 @@ class RoleFlow():
         email = input("Enter your email: ")
         password = input("Enter your password: ")
 
-        #fetch password from database
+        # Fetch user data from the database
         user = usercrud.fetch_user_using_email(email=email, role=self.role)
         if not user:
             print("User not found")
-            self.role=""
+            self.role = ""
             return None
-        
-        if not self._verify_password(password,user[4]):
+
+        # Access password using the key 'password_hash' in the dictionary
+        if not self._verify_password(password, user['password_hash']):
             print("Incorrect Password")
-            self.role=""
+            self.role = ""
             return None
-        user_id = user[0]
+
+        # Access user_id using the key 'user_id'
+        user_id = user['user_id']
         
-        return [user_id,email]
+        return [user_id, email]
         
         
 

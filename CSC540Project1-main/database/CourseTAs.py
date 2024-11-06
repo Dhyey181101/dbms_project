@@ -17,11 +17,17 @@ class CourseTACRUD:
                 """
                 cursor.execute(query, (course_ta_id, course_id, faculty_id))
                 self.connection.commit()
-                print("TA assigned to course successfully.")
+                return True
             except Exception as e:
                 print(f"Error assigning TA to course: {e}")
+                print("Debug Info:")
+                print(f"TA User ID: {course_ta_id}")
+                print(f"Course ID: {course_id}")
+                print(f"Faculty ID: {faculty_id}")
+                return False
             finally:
                 cursor.close()
+        return False
 
     def modify_ta_assignment(self, course_ta_id, course_id=None, faculty_id=None):
         """Modify an existing TA assignment in a course."""

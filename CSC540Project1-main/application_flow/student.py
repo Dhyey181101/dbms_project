@@ -302,7 +302,7 @@ class StudentFlow(Flow):
             student_user_id = user[0]  # Assuming user[0] is the user ID
 
             # Step 5: Enroll the student in the course with 'Pending' status
-            enrollment_successful = enrollcrud.enroll_student(course_id=course_id, student_user_id=student_user_id, enrollment_status="Pending")
+            enrollment_successful = enrollcrud.enroll_student_i(course_id=course_id, student_user_id=student_user_id, enrollment_status="Pending")
 
             if enrollment_successful:
                 print("Enrollment request submitted. You have been added to the waiting list.")

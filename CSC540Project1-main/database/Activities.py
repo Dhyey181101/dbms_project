@@ -23,3 +23,50 @@ class ActivitiesCRUD:
         finally:
             if cursor:
                 cursor.close()  # Ensure cursor is closed in the finally block
+
+    def hide_activity(self, activity_id):
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = "UPDATE Activities SET hidden = TRUE WHERE activity_id = %s"
+                cursor.execute(query, (activity_id,))
+                self.connection.commit()
+                return True
+            except Exception as e:
+                print(f"Error hiding activity: {e}")
+                return False
+            finally:
+                cursor.close()
+
+    def delete_activity(self, activity_id):
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = "DELETE FROM Activities WHERE activity_id = %s"
+                cursor.execute(query, (activity_id,))
+                self.connection.commit()
+                return True
+            except Exception as e:
+                print(f"Error deleting activity: {e}")
+                return False
+            finally:
+                cursor.close()
+
+    def add_activity(self, activity_id, content_block_id, section_id, chapter_id, textbook_id):
+            if self.connection:
+                try:
+                    cursor = self.connection.cursor()
+                    query = """
+                    INSERT INTO Activities (activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(query, (activity_id, content_block_id, section_id, chapter_id, textbook_id))
+                    self.connection.commit()
+                    print("Activity added successfully.")
+                    return True
+                except Exception as e:
+                    print(f"Error adding activity: {e}")
+                    self.connection.rollback()
+                    return False
+                finally:
+                    cursor.close()

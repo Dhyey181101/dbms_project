@@ -8,6 +8,7 @@ from database.Courses import CourseCRUD
 from database.CourseTAs import CourseTACRUD
 from database.Enrollments import EnrollmentCRUD
 from database.Questions import QuestionsCRUD 
+from database.Activities import ActivitiesCRUD
 from utils.db_connector import DatabaseConnectionManager
 
 # Database CRUD operations
@@ -19,7 +20,9 @@ contentblockcrud = ContentBlockCRUD(DatabaseConnectionManager.get_connection())
 coursecrud = CourseCRUD(DatabaseConnectionManager.get_connection())
 coursetacrud = CourseTACRUD(DatabaseConnectionManager.get_connection())
 enrollmentcrud = EnrollmentCRUD(DatabaseConnectionManager.get_connection())
-questions_crud = QuestionsCRUD(DatabaseConnectionManager.get_connection()) 
+questions_crud = QuestionsCRUD(DatabaseConnectionManager.get_connection())
+activities_crud = ActivitiesCRUD(DatabaseConnectionManager.get_connection())
+
 
 class AdminFlow(Flow):
     def __init__(self, user_id, email):
@@ -411,6 +414,7 @@ class AdminFlow(Flow):
                 contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "activity", activity_id)
                 print("Activity content block added successfully.")
                 self.handle_add_question(activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                activities_crud.add_activity(activity_id, content_block_id, section_id, chapter_id, textbook_id)
                 return
             elif choice == 2:
                 print("Going back to the previous menu.")

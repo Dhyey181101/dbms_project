@@ -113,20 +113,21 @@ class ChapterCRUD:
             finally:
                 cursor.close()
 
-    def hide_chapter(self, chapter_name):
-        """Hide a chapter from being displayed by title."""
-        chapter_id = self.get_chapter_id_by_name(chapter_name)
-        if chapter_id and self.connection:
+    def hide_chapter(self, textbook_id, chapter_id):
+        """Sets a chapter as hidden in the database."""
+        if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "UPDATE Chapters SET hidden = %s WHERE chapter_id = %s"
-                cursor.execute(query, (True, chapter_id))
+                query = "UPDATE Chapters SET hidden = TRUE WHERE textbook_id = %s AND chapter_id = %s"
+                cursor.execute(query, (textbook_id, chapter_id))
                 self.connection.commit()
-                print("Chapter hidden successfully.")
+                return True  # Success
             except Exception as e:
                 print(f"Error hiding chapter: {e}")
+                return False  # Failure
             finally:
                 cursor.close()
+        return False
 
 
     def show_chapter(self, chapter_name):
@@ -143,3 +144,19 @@ class ChapterCRUD:
                 print(f"Error showing chapter: {e}")
             finally:
                 cursor.close()
+
+    def delete_chapter(self, textbook_id, chapter_id):
+        """Delete a chapter from the database."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = "DELETE FROM Chapters WHERE textbook_id = %s AND chapter_id = %s"
+                cursor.execute(query, (textbook_id, chapter_id))
+                self.connection.commit()
+                return True  # Success
+            except Exception as e:
+                print(f"Error deleting chapter: {e}")
+                return False  # Failure
+            finally:
+                cursor.close()
+        return False  # Connection failure

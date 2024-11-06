@@ -89,19 +89,20 @@ class SectionCRUD:
             finally:
                 cursor.close()
 
-    def delete_section(self, section_id, chapter_id, textbook_id):
-        """Delete a section from the database using section_id, chapter_id, and textbook_id as identifiers."""
-        if section_id and self.connection:
+    def delete_section(self, textbook_id, chapter_id, section_id):
+        """Deletes a section from the database."""
+        if self.connection:
             try:
                 cursor = self.connection.cursor()
-                query = "DELETE FROM Sections WHERE section_id = %s AND chapter_id = %s AND textbook_id = %s"
-                cursor.execute(query, (section_id, chapter_id, textbook_id))
+                query = "DELETE FROM Sections WHERE textbook_id = %s AND chapter_id = %s AND section_id = %s"
+                cursor.execute(query, (textbook_id, chapter_id, section_id))
                 self.connection.commit()
-                print("Section deleted successfully.")
+                return True
             except Exception as e:
                 print(f"Error deleting section: {e}")
             finally:
                 cursor.close()
+        return False
     
     def get_sections_by_chapter(self, chapter_id, textbook_id, include_hidden=False):
         """Fetch all sections for a given chapter ID and textbook ID."""
@@ -196,5 +197,19 @@ class SectionCRUD:
             cursor.execute(query, (chapter_id, textbook_id))
             sections = cursor.fetchall()
             cursor.close()
-            return sections
-
+            return sections    
+            
+    def hide_section(self, textbook_id, chapter_id, section_id):
+        """Hides a section by setting it as hidden in the database."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor()
+                query = "UPDATE Sections SET hidden = %s WHERE textbook_id = %s AND chapter_id = %s AND section_id = %s"
+                cursor.execute(query, (True, textbook_id, chapter_id, section_id))
+                self.connection.commit()
+                return True
+            except Exception as e:
+                print(f"Error hiding section: {e}")
+            finally:
+                cursor.close()
+        return False

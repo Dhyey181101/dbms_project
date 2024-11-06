@@ -7,6 +7,7 @@ from database.Textbooks import TextbookCRUD
 from database.Sections import SectionCRUD
 from database.ContentBlocks import ContentBlockCRUD
 from database.Questions import QuestionsCRUD
+from database.Activities import ActivitiesCRUD
 from utils.db_connector import DatabaseConnectionManager
 
 
@@ -18,6 +19,8 @@ textbookcrud= TextbookCRUD(DatabaseConnectionManager.get_connection())
 sectioncrud = SectionCRUD(DatabaseConnectionManager.get_connection())
 contentblockcrud= ContentBlockCRUD(DatabaseConnectionManager.get_connection())
 questions_crud=QuestionsCRUD(DatabaseConnectionManager.get_connection())
+activities_crud = ActivitiesCRUD(DatabaseConnectionManager.get_connection())
+
 
 
 class TAFlow(Flow):
@@ -32,7 +35,7 @@ class TAFlow(Flow):
             print("2. View Courses")
             print("3. Change Password")
             print("4. Logout")
-            choice = int(input(""))    
+            choice = int(input("Select your option:"))    
             if choice==1:
                 self.handle_go_to_active_course()
             elif choice==2:
@@ -314,7 +317,10 @@ class TAFlow(Flow):
         while True:
             print("Adding Activity Content Block...")
             activity_id = input("Enter Unique Activity ID: ")
-
+            query = """
+                    INSERT INTO activities (activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """            
             print("\nActivity Menu:")
             print("1. Add Question")
             print("2. Go Back")
@@ -327,6 +333,7 @@ class TAFlow(Flow):
                 contentblockcrud.add_content_block(textbook_id, chapter_id, section_id, content_block_id, "activity", activity_id)
                 print("Activity content block added successfully.")
                 self.handle_add_question(activity_id, content_block_id, section_id, chapter_id, textbook_id)
+                activities_crud.add_activity(activity_id, content_block_id, section_id, chapter_id, textbook_id)
                 return
             elif choice == 2:
                 print("Going back to the previous menu.")
@@ -491,14 +498,53 @@ class TAFlow(Flow):
 
 
     def handle_change_password(self):
-        user = usercrud.fetch_user_using_email(email=self.email, role='teaching_assistant')
-        if not user:
-            print("User not found")
-            return
-        
-        password = input("Enter new password: ")
-        usercrud.update_password(self.email, password)
-        return []
+        # Step A: Prompt for the current password
+        current_password = input("Enter current password: ")
+
+        # Step B: Prompt for the new password
+        new_password = input("Enter new password: ")
+
+        # Step C: Prompt for the confirmation of the new password
+        confirm_password = input("Confirm new password: ")
+
+        while True:
+            # Display the options as per the image
+            print("\nChange Password Menu")
+            print("1. Update")
+            print("2. Go Back")
+            
+            # Get the user's choice
+            choice = input("Choose an option (1-2): ")
+
+            if choice == "1":
+                # Fetch the user based on email and role
+                user = usercrud.fetch_user_using_email(email=self.email, role='faculty')
+                if not user:
+                    print("User not found.")
+                    return
+
+                # Check if the current password matches
+                if current_password != user['password_hash']:
+                    print("Incorrect current password.")
+                    return  # Exit if current password is incorrect
+
+                # Check if the new password matches the confirmation
+                if new_password != confirm_password:
+                    print("New password and confirmation do not match.")
+                    return  # Exit if confirmation doesn't match
+
+                # Update password if everything is correct
+                usercrud.update_password(self.email, new_password)
+                print("Password updated successfully.")
+                return  # Exit after successful update
+
+            elif choice == "2":
+                # Go back to the previous menu without updating
+                print("Returning to TA Landing Page without updating password.")
+                return  # Exit the function to go back
+
+            else:
+                print("Invalid choice. Please try again.")
     
 
     def handle_logout(self):
