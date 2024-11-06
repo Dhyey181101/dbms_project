@@ -124,3 +124,16 @@ class CourseCRUD:
             finally:
                 cursor.close()
         return None
+    def get_textbooks_by_course(self, course_id):
+            """Retrieve textbooks associated with a course."""
+            query = """
+            SELECT t.textbook_id, t.title
+            FROM Textbooks t
+            JOIN Courses c ON t.textbook_id = c.textbook_id
+            WHERE c.course_id = %s
+            """
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, (course_id,))
+            textbooks = cursor.fetchall()
+            cursor.close()
+            return textbooks

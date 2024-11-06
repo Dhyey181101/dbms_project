@@ -98,3 +98,17 @@ class EnrollmentCRUD:
                 print(f"Error deleting enrollment: {e}")
             finally:
                 cursor.close()
+
+    def get_enrolled_courses(self, user_id):
+            """Retrieve a list of courses that a user is enrolled in."""
+            query = """
+            SELECT c.course_id, c.course_name
+            FROM Courses c
+            JOIN Enrollments e ON c.course_id = e.course_id
+            WHERE e.student_user_id = %s AND e.enrollment_status = 'Enrolled'
+            """
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, (user_id,))
+            courses = cursor.fetchall()
+            cursor.close()
+            return courses

@@ -36,4 +36,27 @@ class QuestionsCRUD:
             except Exception as e:
                 print(f"Error adding question: {e}")
             finally:
+                cursor.close()from utils.db_connector import DatabaseConnectionManager
+
+    def get_questions_by_block_id(self, block_id, section_id, chapter_id,textbook_id):
+        """Fetch questions associated with a specific content block, section, and chapter."""
+        if self.connection:
+            try:
+                cursor = self.connection.cursor(dictionary=True)
+                query = """
+                SELECT question_id, question_text, option_1, opt_1_exp, option_2, opt_2_exp, 
+                       option_3, opt_3_exp, option_4, opt_4_exp, answer
+                FROM Questions
+                WHERE block_id = %s AND section_id = %s AND chapter_id = %s AND textbook_id=%s
+                """
+                cursor.execute(query, (block_id, section_id, chapter_id,textbook_id))
+                questions = cursor.fetchall()
+                return questions
+            except Exception as e:
+                print(f"Error fetching questions: {e}")
+                return []
+            finally:
                 cursor.close()
+        else:
+            print("No active database connection.")
+        return []

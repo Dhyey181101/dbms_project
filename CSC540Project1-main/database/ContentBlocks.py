@@ -184,7 +184,7 @@ class ContentBlockCRUD:
                 query = """
                 SELECT content_block_id, content_type, content, section_number, hidden
                 FROM ContentBlocks
-                WHERE textbook_id = %s AND chapter_id = %s AND section_number = %s
+                WHERE section_number = %s AND chapter_id = %s
                 """
                 if not include_hidden:
                     query += " AND hidden = FALSE"
@@ -196,3 +196,24 @@ class ContentBlockCRUD:
             finally:
                 cursor.close()
         return []
+
+    def retrieve_content_blocks_for_section(self, course_id, textbook_id, chapter_id, section_id, include_hidden=False):
+        """Retrieve content blocks for a specific section within a chapter, textbook, and course."""
+        query = """
+        SELECT cb.content_block_id, cb.content_type, cb.content
+        FROM ContentBlocks cb
+        JOIN Sections s ON cb.section_number = s.section_id AND cb.chapter_id = s.chapter_id AND cb.textbook_id = s.textbook_id
+        JOIN Chapters ch ON s.chapter_id = ch.chapter_id AND s.textbook_id = ch.textbook_id
+        JOIN Textbooks t ON ch.textbook_id = t.textbook_id
+        JOIN Courses c ON t.textbook_id = c.textbook_id
+        WHERE c.course_id = %s AND t.textbook_id = %s AND ch.chapter_id = %s AND s.section_id = %s
+        """
+        if not include_hidden:
+            query += " AND cb.hidden = FALSE"
+        
+        cursor = self.connection.cursor(dictionary=True)
+        cursor.execute(query, (course_id, textbook_id, chapter_id, section_id))
+        content_blocks = cursor.fetchall()
+        cursor.close()
+        
+        return content_blocks

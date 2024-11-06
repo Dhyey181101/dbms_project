@@ -122,17 +122,24 @@ class SectionCRUD:
         return []
 
     def get_all_sections_associated_with_user(self, user_id):
-        """Fetch all sections associated with activities the user has participated in."""
+        """Fetch all sections associated with courses the user is enrolled in, along with course, textbook, and chapter details."""
         if self.connection:
             try:
                 cursor = self.connection.cursor(dictionary=True)
                 query = """
-                SELECT DISTINCT s.section_id, s.title
-                FROM Sections s
-                JOIN Chapters ch ON s.textbook_id = ch.textbook_id AND s.chapter_id = ch.chapter_id
-                JOIN Courses c ON ch.textbook_id = c.textbook_id
-                JOIN StudentActivities sa ON c.course_id = sa.course_id
-                WHERE sa.student_id = %s AND s.hidden = FALSE
+                SELECT DISTINCT 
+                    c.course_id,
+                    c.course_name,
+                    t.textbook_id,
+                    ch.chapter_id,
+                    s.section_id,
+                    s.title AS section_title
+                FROM Enrollments e
+                JOIN Courses c ON e.course_id = c.course_id
+                JOIN Textbooks t ON c.textbook_id = t.textbook_id
+                JOIN Chapters ch ON t.textbook_id = ch.textbook_id
+                JOIN Sections s ON ch.textbook_id = s.textbook_id AND ch.chapter_id = s.chapter_id
+                WHERE e.student_user_id = %s AND e.enrollment_status = 'Enrolled' AND s.hidden = FALSE
                 """
                 cursor.execute(query, (user_id,))
                 sections = cursor.fetchall()
@@ -163,5 +170,31 @@ class SectionCRUD:
                 cursor.close()
         return []
 
+    def get_chapters_by_textbook(self, textbook_id):
+            """Retrieve chapters for a specific textbook."""
+            query = """
+            SELECT chapter_id, title
+            FROM Chapters
+            WHERE textbook_id = %s AND hidden = FALSE
+            """
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, (textbook_id,))
+            chapters = cursor.fetchall()
+            cursor.close()
+            return chapters
 
+    def get_sections_by_chapter(self, chapter_id, textbook_id, include_hidden=False):
+            """Retrieve sections for a chapter in a specific textbook."""
+            query = """
+            SELECT section_id, title
+            FROM Sections
+            WHERE chapter_id = %s AND textbook_id = %s
+            """
+            if not include_hidden:
+                query += " AND hidden = FALSE"
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, (chapter_id, textbook_id))
+            sections = cursor.fetchall()
+            cursor.close()
+            return sections
 
