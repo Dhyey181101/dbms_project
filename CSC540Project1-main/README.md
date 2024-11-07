@@ -1,5 +1,12 @@
 # CSC540Project1
 
+Team Members:
+1. Dhyey Samirbhai Shah
+2. Krishna Prashant Patel
+3. jinil Shukla
+4. Divij Shah 
+
+
 Execute the commands in create_tables.sql to make the tables.
 `DO NOT CHANGE THE SCHEMA. LET EVERYONE KNOW IF YOU DO.`
 
