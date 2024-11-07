@@ -19,12 +19,4 @@ def print_list_as_table(headings, rows):
     # Print the closing separator
     print(separator)
 
-# Example usage:
-headings = ["Name", "Age", "Country"]
-rows = [
-    ["Alice", 30, "United States"],
-    ["Bob", 22, "Canada"],
-    ["Charlie", 35, "United Kingdom"]
-]
 
-print_list_as_table(headings, rows)

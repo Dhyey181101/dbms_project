@@ -14,7 +14,7 @@ class DBQueries:
                 query = """
                 SELECT COUNT(*) AS section_count 
                 FROM Sections 
-                WHERE chapter_id = (
+                WHERE textbook_id = %s AND chapter_id = (
                     SELECT chapter_id 
                     FROM Chapters 
                     WHERE textbook_id = %s 
@@ -22,7 +22,7 @@ class DBQueries:
                     LIMIT 1
                 )
                 """
-                cursor.execute(query, (textbook_id,))
+                cursor.execute(query, (textbook_id, textbook_id))
                 result = cursor.fetchone()
                 return result[0] if result else 0
             except Exception as e:

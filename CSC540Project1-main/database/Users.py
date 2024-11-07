@@ -213,3 +213,19 @@ class UserCRUD:
                 return False
             finally:
                 cursor.close()
+
+    def fetch_user_using_email_s(self, email, role):
+        if self.connection:
+            cursor = self.connection.cursor()
+            try:
+                query = "SELECT * FROM Users WHERE email = %s AND role = %s"
+                cursor.execute(query, (email, role))
+                user = cursor.fetchone()
+                if user:
+                    return user
+                else:
+                    return None
+            except Exception as e:
+                print(f"Error reading user: {e}")
+            finally:
+                cursor.close()

@@ -35,7 +35,8 @@ def execute_query(query_number):
     """Execute the selected query and print the results."""
     if query_number == 1:
         # Query 1: Number of sections in the first chapter of a textbook
-        section_count = db_queries.get_first_chapter_section_count(textbook_id=101)  # assuming textbook ID is 101
+        textbook=int(input("Enter textbook ID:"))
+        section_count = db_queries.get_first_chapter_section_count(textbook)  # assuming textbook ID is 101
         print("Number of sections in the first chapter:", section_count)
     elif query_number == 2:
         results = db_queries.get_faculty_and_tas()

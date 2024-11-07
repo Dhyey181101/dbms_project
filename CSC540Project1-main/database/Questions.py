@@ -36,7 +36,7 @@ class QuestionsCRUD:
             except Exception as e:
                 print(f"Error adding question: {e}")
             finally:
-                cursor.close()from utils.db_connector import DatabaseConnectionManager
+                cursor.close()
 
     def get_questions_by_block_id(self, block_id, section_id, chapter_id,textbook_id):
         """Fetch questions associated with a specific content block, section, and chapter."""

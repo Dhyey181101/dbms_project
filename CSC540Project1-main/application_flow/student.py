@@ -15,7 +15,7 @@ coursecrud = CourseCRUD(DatabaseConnectionManager.get_connection())
 enrollcrud = EnrollmentCRUD(DatabaseConnectionManager.get_connection())
 contentblockcrud = ContentBlockCRUD(DatabaseConnectionManager.get_connection())
 sectioncrud = SectionCRUD(DatabaseConnectionManager.get_connection())
-questioncrud = QuestionCRUD(DatabaseConnectionManager.get_connection())
+questioncrud = QuestionsCRUD(DatabaseConnectionManager.get_connection())
 activitycrud=ActivitiesCRUD(DatabaseConnectionManager.get_connection())
 studentactivitycrud = StudentActivityCRUD(DatabaseConnectionManager.get_connection())
 
@@ -128,8 +128,22 @@ class StudentFlow(Flow):
                 
 
     def view_participation_points(self):
-        """Display the total participation points and a go-back option."""
-        total_points = studentactivitycrud.get_total_participation_points(self.user_id)
+        """Display the total participation points or zero if no participation points are found, with a go-back option."""
+        
+        try:
+            # Attempt to fetch total participation points
+            total_points = studentactivitycrud.get_total_participation_points(self.user_id)
+            
+            # If no points found (e.g., result is None), set to zero
+            if total_points is None:
+                total_points = 0
+
+        except Exception as e:
+            # Handle any errors (e.g., if user ID is not found) by setting total points to zero
+            
+            total_points = 0
+        
+        # Display the participation points
         print(f"\nTotal Participation Activity Points: {total_points}")
         
         # Display the menu to go back
@@ -302,7 +316,7 @@ class StudentFlow(Flow):
             student_user_id = user[0]  # Assuming user[0] is the user ID
 
             # Step 5: Enroll the student in the course with 'Pending' status
-            enrollment_successful = enrollcrud.enroll_student_i(course_id=course_id, student_user_id=student_user_id, enrollment_status="Pending")
+            enrollment_successful = enrollcrud.enroll_student(course_id=course_id, student_user_id=student_user_id, enrollment_status="Pending")
 
             if enrollment_successful:
                 print("Enrollment request submitted. You have been added to the waiting list.")
@@ -324,7 +338,7 @@ class StudentFlow(Flow):
         password = input("Enter your password: ")
 
         #fetch password from database
-        user = usercrud.fetch_user_using_email(email=email, role='student')
+        user = usercrud.fetch_user_using_email_s(email=email, role='student')
         if not user:
             print("User not found")
             self.role=""

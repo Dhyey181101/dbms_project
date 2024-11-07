@@ -457,7 +457,7 @@ class FacultyFlow(Flow):
                 elif choice == 2:
                     self.handle_delete_section(textbook_id, chapter_id, section_number)
                 elif choice == 3:
-                    self.handle_add_content_block(textbook_id, chapter_id, section_number)
+                    self.handle_add_content_block(section_number, chapter_id, textbook_id)
                 elif choice == 4:
                     self.handle_modify_content_block(textbook_id, chapter_id, section_number)
                 elif choice == 5:
@@ -559,16 +559,10 @@ class FacultyFlow(Flow):
         
     def handle_modify_content_block(self, textbook_id, chapter_id, section_number):
         print("Modifying a content block...")
-        content_blocks = contentblockcrud.get_content_blocks_by_section(textbook_id, chapter_id, section_number)
-
-        if not content_blocks:
-            print("No content blocks found for this section.")
-            return
 
         content_block_id = input("Enter Content Block ID to modify: ")
-        selected_block = next((block for block in content_blocks if str(block['content_block_id']) == content_block_id), None)
 
-        if selected_block:
+        if content_block_id:
             while True:
                 print("\nModify Content Block Menu:")
                 print("1. Hide Content Block")
@@ -651,7 +645,7 @@ class FacultyFlow(Flow):
         choice = input("Choose an option: ")
         
         if choice == "1":
-            success = activity_crud.hide_activity(activity_id)
+            success = activities_crud.hide_activity(activity_id)
             if success:
                 print("Activity hidden successfully.")
             else:
@@ -666,7 +660,7 @@ class FacultyFlow(Flow):
         choice = input("Choose an option: ")
         
         if choice == "1":
-            success = activity_crud.delete_activity(activity_id)
+            success = activities_crud.delete_activity(activity_id)
             if success:
                 print("Activity deleted successfully.")
             else:
